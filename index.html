@@ -226,6 +226,18 @@
   .gear .gmain{flex:1;min-width:0}.gear .gn{font-weight:800;font-size:14px}.gear .gs{font-size:11.5px;color:var(--muted);font-weight:700;margin-top:2px}
   .gbtn{border:none;border-radius:11px;padding:10px 13px;font-weight:800;font-size:12.5px;cursor:pointer;background:var(--surface-2);color:var(--text);flex:none;white-space:nowrap}
   .gbtn.buy{background:var(--c-richesse);color:#fff}.gbtn.on{background:var(--accent);color:#fff}.gbtn.lock{color:var(--faint);cursor:not-allowed}
+  .hero .fbody.herofig{background:none!important;box-shadow:none!important;width:118px;height:150px;border-radius:0;overflow:visible}
+  .heroSvg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 6px 8px rgba(0,0,0,.28))}
+  .class-banner{width:100%;margin-bottom:12px;border:none;border-radius:14px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;background:linear-gradient(180deg,#7d63e0,#5b44d4);color:#fff;box-shadow:0 8px 18px rgba(91,68,212,.4);animation:bannerPulse 1.6s ease-in-out infinite}
+  @keyframes bannerPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+  .class-list{display:flex;flex-direction:column;gap:11px;margin-top:6px}
+  .class-card{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;cursor:pointer;box-shadow:var(--shadow-sm)}
+  .class-card:active{transform:scale(.99)}
+  .class-em{width:54px;height:54px;border-radius:14px;display:grid;place-items:center;font-size:28px;flex:none;box-shadow:var(--shadow-sm)}
+  .class-info{flex:1}.class-n{font-weight:800;font-size:16px}.class-d{font-size:12.5px;color:var(--muted);font-weight:600;margin-top:3px;line-height:1.4}
+  .skinic{font-size:20px;font-weight:900}
+  .rar{font-size:9.5px;font-weight:800;padding:1px 6px;border-radius:6px;vertical-align:middle;letter-spacing:.03em}
+  .rar-Rare{background:#2d6fe022;color:#2D8CFF}.rar-Épique{background:#b07bff22;color:#9b7bff}.rar-Légendaire{background:#ffcf5a22;color:#C99A2E}
   @media (prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.05s!important}}
 </style>
 </head>
@@ -453,25 +465,65 @@ const DEFAULT_TASKS=[
   {id:'projet',cat:'esprit',name:'Avancer sur un projet',pts:50,type:'check'},
   {id:'anglais',cat:'langues',name:'Anglais — Leçon & Quiz',pts:0,type:'learn',set:'anglais'},
 ];
-const ITEMS=[
-  {id:'w0',slot:'weapon',name:'Dague',ic:'🗡️',atk:5,cost:0,req:0},
-  {id:'w1',slot:'weapon',name:'Épée courte',ic:'⚔️',atk:16,cost:80,req:3},
-  {id:'w2',slot:'weapon',name:'Hache de guerre',ic:'🪓',atk:38,cost:240,req:6},
-  {id:'w3',slot:'weapon',name:'Trident',ic:'🔱',atk:75,cost:700,req:10},
-  {id:'w4',slot:'weapon',name:'Marteau colossal',ic:'🔨',atk:140,cost:1800,req:15},
-  {id:'w5',slot:'weapon',name:'Lame runique',ic:'⚡',atk:260,cost:4500,req:22},
-  {id:'a0',slot:'armor',name:'Tunique',ic:'🧵',pv:0,def:0,cost:0,req:0,c:['#9aa0b5','#6b7189']},
-  {id:'a1',slot:'armor',name:'Cuir',ic:'🟫',pv:45,def:3,cost:90,req:3,c:['#B08050','#6E4A28']},
-  {id:'a2',slot:'armor',name:'Cotte de mailles',ic:'⛓️',pv:130,def:9,cost:280,req:6,c:['#AEB6C2','#6D7684']},
-  {id:'a3',slot:'armor',name:'Plates d’acier',ic:'🛡️',pv:300,def:20,cost:800,req:10,c:['#C7D0DA','#7C8794']},
-  {id:'a4',slot:'armor',name:'Armure de mithril',ic:'✨',pv:640,def:42,cost:2000,req:15,c:['#8FE3D6','#2E9E8C']},
-  {id:'a5',slot:'armor',name:'Écailles de dragon',ic:'🐲',pv:1300,def:85,cost:5000,req:22,c:['#E27A5A','#9E2B1E']},
-  {id:'m1',slot:'amulet',name:'Ambre',ic:'🟠',crit:8,cost:120,req:4},
-  {id:'m2',slot:'amulet',name:'Rubis de rage',ic:'🔴',crit:16,atk:12,cost:420,req:8},
-  {id:'m3',slot:'amulet',name:'Saphir précis',ic:'🔵',crit:28,cost:1200,req:13},
-  {id:'m4',slot:'amulet',name:'Étoile filante',ic:'🌟',crit:42,atk:45,cost:3200,req:20},
+const CLASS_UNLOCK_LEVEL=8;
+const CLASSES={
+  novice:{name:'Novice',emoji:'🧍',desc:'Aucune voie encore. Choisis ta classe au niveau '+CLASS_UNLOCK_LEVEL+'.',atkMul:1,pvMul:1,crit:0,def:0},
+  assassin:{name:'Assassin',emoji:'🗡️',desc:'Dagues rapides, critiques dévastateurs. Fragile mais mortel.',type:'dagger',atkMul:1.1,pvMul:.9,crit:15,def:0},
+  chevalier:{name:'Chevalier',emoji:'🛡️',desc:'Épée & armure lourde. Tank robuste qui encaisse tout.',type:'sword',atkMul:1,pvMul:1.35,crit:0,def:10},
+  faucheur:{name:'Faucheur',emoji:'💀',desc:'Faux immense, dégâts bruts colossaux.',type:'scythe',atkMul:1.25,pvMul:1,crit:5,def:2},
+  sorcier:{name:'Sorcier',emoji:'🔮',desc:'Bâton arcanique, puissance magique et critiques.',type:'staff',atkMul:1.18,pvMul:.95,crit:8,def:0},
+};
+const CLASS_PAL={
+  novice:{p:'#8892a3',s:'#5c6472',t:'#cfd6e0',skin:'#e8b58a'},
+  assassin:{p:'#2b2f3a',s:'#171a22',t:'#7d63e0',skin:'#d9a97e'},
+  chevalier:{p:'#c2ccd9',s:'#828e9d',t:'#ffd05a',skin:'#e8b58a'},
+  faucheur:{p:'#26332d',s:'#141d18',t:'#82e6a6',skin:'#c9d1cf'},
+  sorcier:{p:'#3c2d70',s:'#241a4a',t:'#b98bff',skin:'#e8b58a'},
+};
+const WEAPONS=[
+  {id:'w_stick',cls:'novice',type:'staff',mat:'#9a6a3a',name:'Bâton de bois',atk:4,cost:0,req:0},
+  {id:'w_knife',cls:'novice',type:'dagger',mat:'#8a8f99',name:'Couteau rouillé',atk:11,cost:45,req:2},
+  {id:'w_club',cls:'novice',type:'club',mat:'#7a5330',name:'Gourdin',atk:20,cost:110,req:4},
+  {id:'as1',cls:'assassin',type:'dagger',mat:'#aeb6c2',name:'Dague en fer',atk:28,crit:4,cost:200,req:8},
+  {id:'as2',cls:'assassin',type:'dagger',mat:'#d7dee8',name:'Dagues jumelles',atk:52,crit:8,cost:500,req:12},
+  {id:'as3',cls:'assassin',type:'dagger',mat:'#7d63e0',name:'Kunai d’ombre',atk:95,crit:12,cost:1200,req:16},
+  {id:'as4',cls:'assassin',type:'dagger',mat:'#2fbf6b',name:'Croc de vipère',atk:180,crit:16,cost:3000,req:22},
+  {id:'as5',cls:'assassin',type:'dagger',mat:'#b98bff',name:'Lames du néant',atk:340,crit:22,cost:7000,req:30},
+  {id:'ch1',cls:'chevalier',type:'sword',mat:'#aeb6c2',name:'Épée en fer',atk:34,cost:220,req:8},
+  {id:'ch2',cls:'chevalier',type:'sword',mat:'#d7dee8',name:'Épée large',atk:60,cost:520,req:12},
+  {id:'ch3',cls:'chevalier',type:'sword',mat:'#eaf0f6',name:'Lame d’acier',atk:110,cost:1300,req:16},
+  {id:'ch4',cls:'chevalier',type:'sword',mat:'#ffd05a',name:'Épée sacrée',atk:200,cost:3200,req:22},
+  {id:'ch5',cls:'chevalier',type:'sword',mat:'#ff9a3a',name:'Excalibur',atk:380,cost:7500,req:30},
+  {id:'fa1',cls:'faucheur',type:'scythe',mat:'#aeb6c2',name:'Faux rouillée',atk:32,cost:210,req:8},
+  {id:'fa2',cls:'faucheur',type:'scythe',mat:'#d7dee8',name:'Faux d’acier',atk:58,cost:520,req:12},
+  {id:'fa3',cls:'faucheur',type:'scythe',mat:'#e6e2cf',name:'Faux d’os',atk:105,cost:1300,req:16},
+  {id:'fa4',cls:'faucheur',type:'scythe',mat:'#82e6a6',name:'Faux des âmes',atk:195,crit:6,cost:3200,req:22},
+  {id:'fa5',cls:'faucheur',type:'scythe',mat:'#57e08a',name:'Faux de l’apocalypse',atk:370,crit:10,cost:7500,req:30},
+  {id:'so1',cls:'sorcier',type:'staff',mat:'#8a8f99',name:'Bâton noueux',atk:30,crit:4,cost:210,req:8},
+  {id:'so2',cls:'sorcier',type:'staff',mat:'#caa24a',name:'Sceptre orné',atk:55,crit:8,cost:520,req:12},
+  {id:'so3',cls:'sorcier',type:'staff',mat:'#8fe0ff',name:'Bâton de cristal',atk:100,crit:12,cost:1300,req:16},
+  {id:'so4',cls:'sorcier',type:'staff',mat:'#b98bff',name:'Bâton arcanique',atk:190,crit:16,cost:3200,req:22},
+  {id:'so5',cls:'sorcier',type:'staff',mat:'#e0a0ff',name:'Bâton du cosmos',atk:360,crit:22,cost:7500,req:30},
 ];
-const SLOTS=[['weapon','Armes','🗡️'],['armor','Armures',' 🛡️'],['amulet','Amulettes','📿']];
+const ARMORS=[
+  {id:'ar0',name:'Haillons',pv:0,def:0,cost:0,req:0},
+  {id:'ar1',name:'Cuir usé',pv:40,def:3,cost:90,req:3},
+  {id:'ar2',name:'Cotte de mailles',pv:120,def:9,cost:280,req:6},
+  {id:'ar3',name:'Plates',pv:300,def:20,cost:800,req:10},
+  {id:'ar4',name:'Armure lourde',pv:640,def:42,cost:2000,req:16},
+  {id:'ar5',name:'Armure légendaire',pv:1300,def:85,cost:5000,req:24},
+];
+const SKINS=[
+  {id:'base',name:'Aucun skin',rarity:'—',aura:null,pal:null,cond:()=>true,hint:'Défaut'},
+  {id:'shadow',name:'Ombre',rarity:'Rare',aura:{c:'#7d63e0',style:'smoke'},pal:{p:'#15161d',s:'#0b0c11',t:'#9b7bff',skin:'#b9a9d6'},cond:()=>state.floorMax>=25||life().kills>=200,hint:'Atteins l’étage 25 ou tue 200 mobs'},
+  {id:'reaper',name:'Faucheur spectral',rarity:'Épique',aura:{c:'#57e08a',style:'smoke'},pal:{p:'#101a15',s:'#080f0b',t:'#57e08a',skin:'#d7ece0'},cond:()=>life().kills>=500&&state.floorMax>=40,hint:'500 mobs tués + étage 40'},
+  {id:'flame',name:'Seigneur des flammes',rarity:'Épique',aura:{c:'#ff6a2c',style:'fire'},pal:{p:'#3a1410',s:'#210a08',t:'#ff8c3a',skin:'#e8b58a'},cond:()=>state.floorMax>=50,hint:'Atteins l’étage 50'},
+  {id:'frost',name:'Givre éternel',rarity:'Rare',aura:{c:'#5ec8ff',style:'frost'},pal:{p:'#16303f',s:'#0d1e2a',t:'#8fe0ff',skin:'#dff2ff'},cond:()=>life().quiz>=300,hint:'300 bonnes réponses de quiz'},
+  {id:'gold',name:'Roi doré',rarity:'Épique',aura:{c:'#ffcf5a',style:'sparkle'},pal:{p:'#8a6a1e',s:'#5e4712',t:'#ffe08a',skin:'#e8b58a'},cond:()=>state.euros>=50000||heroLevel()>=40,hint:'Fortune 50 000€ ou niveau 40'},
+  {id:'void',name:'Chevalier du Néant',rarity:'Légendaire',aura:{c:'#9b7bff',style:'smoke'},pal:{p:'#0a0a12',s:'#040407',t:'#b98bff',skin:'#8f86b5'},cond:()=>state.floorMax>=100,hint:'Atteins l’étage 100'},
+  {id:'celestial',name:'Séraphin',rarity:'Légendaire',aura:{c:'#ffe9a8',style:'holy'},wings:true,pal:{p:'#eae4d0',s:'#c9c1a4',t:'#ffd05a',skin:'#e8b58a'},cond:()=>life().dhikr>=10000,hint:'10 000 dhikr cumulés'},
+  {id:'cosmic',name:'Entité cosmique',rarity:'Légendaire',aura:{c:'#7c9bff',style:'stars'},pal:{p:'#1b1740',s:'#0f0d26',t:'#9bb0ff',skin:'#cfe0ff'},cond:()=>heroLevel()>=75,hint:'Atteins le niveau 75'},
+];
 const MOBS=['🐀','🦇','🐍','🦂','🕷️','👺','🐺','👹','🧟','👻','🐗','💀','👿','🦈','🐲','🦖','☠️','🌑'];
 function mobAt(n){const boss=n%10===0;const emoji=boss?'👹':MOBS[(n-1)%MOBS.length];let hp=Math.round(26*Math.pow(1.16,n-1));let atk=Math.round(4*Math.pow(1.12,n-1));let gold=Math.round(6*Math.pow(1.14,n-1))+3;if(boss){hp=Math.round(hp*4);atk=Math.round(atk*1.5);gold*=5;}return{n,emoji,hp,atk,gold,boss,name:boss?('👑 Boss · étage '+n):('Étage '+n)};}
 const BOOST_COST=30;
@@ -491,10 +543,22 @@ const freshDaily=()=>({dhikr:0,verses:0,pages:0,surahs:0,quiz:0,kills:0,euros:0,
 const defaultState=()=>({cats:JSON.parse(JSON.stringify(DEFAULT_CATS)),tasks:JSON.parse(JSON.stringify(DEFAULT_TASKS)),
   xp:{ame:0,esprit:0,langues:0},euros:0,day:todayKey(),done:{},daily:freshDaily(),streak:0,streakDay:null,
   baraka:0,boostDay:null,geo:null,prayerTimes:null,
-  floor:1,gold:0,gear:{weapon:'w0',armor:'a0',amulet:null},owned:['w0','a0'],
+  floor:1,floorMax:1,gold:0,klass:'novice',skin:'base',gear:{weapon:'w_stick',armor:'ar0'},owned:['w_stick','ar0'],
+  life:{dhikr:0,verses:0,quiz:0,kills:0,pages:0},
   theme:null,muted:false,seq:1});
 let state=load();
-migrateContent();
+migrateContent();migrateCombat();
+function migrateCombat(){
+  if(!state.klass)state.klass='novice';
+  if(!state.skin||typeof state.skin!=='string')state.skin='base';
+  if(!state.life)state.life={dhikr:0,verses:0,quiz:0,kills:0,pages:0};
+  if(state.floorMax==null)state.floorMax=state.floor||1;
+  if(!state.gear||!WEAPONS.find(w=>w.id===state.gear.weapon))state.gear={weapon:'w_stick',armor:'ar0'};
+  if(!ARMORS.find(a=>a.id===state.gear.armor))state.gear.armor='ar0';
+  const keep=(state.owned||[]).filter(id=>WEAPONS.find(w=>w.id===id)||ARMORS.find(a=>a.id===id));
+  state.owned=Array.from(new Set(['w_stick','ar0'].concat(keep)));
+  save();
+}
 function migrateContent(){
   if(!state.cats.find(c=>c.id==='langues')){const i=state.cats.findIndex(c=>c.type==='money');const cat={id:'langues',name:'Langues',emoji:'🗣️',color:'#2D8CFF',type:'xp',stages:LANG_STAGES};if(i>=0)state.cats.splice(i,0,cat);else state.cats.push(cat);}
   if(state.xp['langues']==null)state.xp['langues']=0;
@@ -518,12 +582,15 @@ function globalPtsForLevel(L){let need=260,acc=0;for(let k=1;k<L;k++){acc+=need;
 function stageFor(cat,level){const arr=cat.stages||GENERIC_STAGES;const i=Math.min(Math.floor((level-1)/3),arr.length-1);return{name:arr[i],idx:i,arr};}
 function rankFor(euros,ranks){let cur=0;for(let i=0;i<ranks.length;i++)if(euros>=ranks[i][0])cur=i;const next=cur<ranks.length-1?cur+1:null;return{cur,next,name:ranks[cur][1],nextName:next!=null?ranks[next][1]:null,nextAt:next!=null?ranks[next][0]:null,prevAt:ranks[cur][0]};}
 function boostActive(){return state.boostDay===todayKey();}
-function itemById(id){return ITEMS.find(x=>x.id===id);}
-function equippedArmor(){return itemById(state.gear.armor)||itemById('a0');}
-function equippedWeapon(){return itemById(state.gear.weapon)||itemById('w0');}
-function equippedAmulet(){return state.gear.amulet?itemById(state.gear.amulet):null;}
-function gearStats(){const s={atk:0,pv:0,def:0,crit:0};for(const slot in state.gear){const it=itemById(state.gear[slot]);if(it){s.atk+=it.atk||0;s.pv+=it.pv||0;s.def+=it.def||0;s.crit+=it.crit||0;}}return s;}
-function heroStats(){const g=gearStats();const a=catLevel('ame'),e=catLevel('esprit'),l=(state.xp['langues']!=null?catLevel('langues'):0);const rc=state.cats.find(c=>c.type==='money');const ri=rc?rankFor(state.euros,rc.ranks).cur:0;const atk=6+a*3+l*2+g.atk;const pvmax=60+(a+e+l)*6+ri*20+g.pv;const crit=Math.min(60,5+e*2+g.crit);const def=ri*2+g.def;return{atk,pvmax,crit,def,level:a+e+l+ri};}
+function life(){return state.life||(state.life={dhikr:0,verses:0,quiz:0,kills:0,pages:0});}
+function equippedArmor(){return ARMORS.find(a=>a.id===state.gear.armor)||ARMORS[0];}
+function equippedWeapon(){return WEAPONS.find(w=>w.id===state.gear.weapon)||WEAPONS[0];}
+function klass(){return CLASSES[state.klass]||CLASSES.novice;}
+function gearStats(){const s={atk:0,pv:0,def:0,crit:0};const w=equippedWeapon(),a=equippedArmor();s.atk+=w.atk||0;s.crit+=w.crit||0;s.pv+=a.pv||0;s.def+=a.def||0;return s;}
+function heroLevel(){const a=catLevel('ame'),e=catLevel('esprit'),l=(state.xp['langues']!=null?catLevel('langues'):0);const rc=state.cats.find(c=>c.type==='money');const ri=rc?rankFor(state.euros,rc.ranks).cur:0;return a+e+l+ri;}
+function heroStats(){const g=gearStats(),k=klass();const a=catLevel('ame'),e=catLevel('esprit'),l=(state.xp['langues']!=null?catLevel('langues'):0);const rc=state.cats.find(c=>c.type==='money');const ri=rc?rankFor(state.euros,rc.ranks).cur:0;const atk=Math.round((6+a*3+l*2+g.atk)*(k.atkMul||1));const pvmax=Math.round((60+(a+e+l)*6+ri*20+g.pv)*(k.pvMul||1));const crit=Math.min(70,5+e*2+g.crit+(k.crit||0));const def=ri*2+g.def+(k.def||0);return{atk,pvmax,crit,def,level:a+e+l+ri};}
+function skinUnlocked(s){try{return s.cond();}catch(e){return false;}}
+function heroPalette(){const sk=SKINS.find(s=>s.id===state.skin);if(sk&&sk.pal)return sk.pal;return CLASS_PAL[state.klass]||CLASS_PAL.novice;}
 function fmtDur(ms){ms=Math.max(0,ms);const s=Math.floor(ms/1000),m=Math.floor(s/60),ss=s%60;if(m>=60){const h=Math.floor(m/60);return h+'h'+String(m%60).padStart(2,'0');}return m+':'+String(ss).padStart(2,'0');}
 
 /* ---------- prayer times ---------- */
@@ -558,14 +625,59 @@ function todayQuests(){let s=hashStr(state.day)||1;const pool=QUEST_POOL.slice()
 function metricVal(m){switch(m){case'prayers':return PRAYER_IDS.filter(id=>state.done[id]).length;case'dhikr':return state.daily.dhikr;case'verses':return state.daily.verses;case'pages':return state.daily.pages;case'surahs':return state.daily.surahs;case'quiz':return state.daily.quiz;case'kills':return state.daily.kills||0;case'euros':return state.daily.euros;case'tasks':return Object.keys(state.done).length;}return 0;}
 function claimQuest(q){ensureDay();if(state.daily.claimed[q.id]||metricVal(q.metric)<q.goal)return;state.daily.claimed[q.id]=true;state.baraka+=q.baraka;if(q.xp>0&&q.cat)award(q.cat,q.xp,$('#barakaChip'));save();updateBaraka();burst(40);beep(1000,.2,'triangle',.15);toast('✦ +'+q.baraka+' Baraka'+(q.xp?(' · +'+q.xp+' XP'):''));renderDay();}
 
+/* ---------- character (SVG) ---------- */
+function weaponSVG(type,col){
+  switch(type){
+    case'dagger':return`<polygon points="-3,8 3,8 0,-16" fill="${col}"/><rect x="-7" y="7" width="14" height="4" rx="1" fill="#3a3a3a"/><rect x="-2.2" y="11" width="4.4" height="13" rx="1.5" fill="#5a4632"/>`;
+    case'sword':return`<polygon points="-3.5,4 3.5,4 0,-42" fill="${col}"/><polygon points="-3.5,4 3.5,4 0,-42" fill="#ffffff" opacity=".25"/><rect x="-12" y="3" width="24" height="5" rx="2" fill="#caa24a"/><rect x="-2.6" y="8" width="5.2" height="18" rx="2" fill="#5a4632"/><circle cx="0" cy="28" r="4" fill="#caa24a"/>`;
+    case'scythe':return`<rect x="-2.5" y="-24" width="5" height="74" rx="2.5" fill="#5a4632"/><path d="M-2,-24 q40,-4 40,30 q-10,-22 -40,-16 z" fill="${col}"/><path d="M-2,-24 q40,-4 40,30" fill="none" stroke="#ffffff" stroke-opacity=".3" stroke-width="1.5"/>`;
+    case'club':return`<rect x="-3" y="-2" width="6" height="46" rx="3" fill="#7a5330"/><ellipse cx="0" cy="-10" rx="12" ry="15" fill="${col}"/><circle cx="-4" cy="-14" r="2" fill="#00000022"/><circle cx="4" cy="-6" r="2" fill="#00000022"/>`;
+    default:return`<rect x="-2.6" y="-30" width="5.2" height="82" rx="2.6" fill="#8a5f30"/><circle cx="0" cy="-34" r="8" fill="${col}"/><circle cx="0" cy="-34" r="4" fill="#ffffff" opacity=".55"/>`; // staff
+  }
+}
+function drawHero(){
+  const pal=heroPalette(),k=klass(),w=equippedWeapon(),arm=equippedArmor();const sk=SKINS.find(s=>s.id===state.skin);const aura=sk&&sk.aura;const wings=sk&&sk.wings;const tier=Math.max(0,ARMORS.indexOf(arm));const gid='au'+Math.random().toString(36).slice(2,7);
+  let auraSvg='';let parts='';
+  if(aura){auraSvg=`<defs><radialGradient id="${gid}"><stop offset="0%" stop-color="${aura.c}" stop-opacity=".55"/><stop offset="60%" stop-color="${aura.c}" stop-opacity=".18"/><stop offset="100%" stop-color="${aura.c}" stop-opacity="0"/></radialGradient></defs><circle cx="70" cy="92" r="70" fill="url(#${gid})"/>`;
+    if(aura.style==='stars'){for(let i=0;i<8;i++){const x=18+Math.random()*104,y=20+Math.random()*130;parts+=`<circle cx="${x.toFixed(0)}" cy="${y.toFixed(0)}" r="${(Math.random()*1.6+.6).toFixed(1)}" fill="#fff" opacity=".85"/>`;}}
+    else if(aura.style==='fire'){parts+=`<path d="M40,150 q6,-26 -2,-40 q18,14 10,40 z" fill="${aura.c}" opacity=".5"/><path d="M100,150 q-6,-26 2,-40 q-18,14 -10,40 z" fill="${aura.c}" opacity=".5"/>`;}
+    else if(aura.style==='sparkle'){for(let i=0;i<6;i++){const x=24+Math.random()*92,y=24+Math.random()*120;parts+=`<text x="${x.toFixed(0)}" y="${y.toFixed(0)}" font-size="9" fill="${aura.c}">✦</text>`;}}
+  }
+  let winSvg='';if(wings){winSvg=`<path d="M56,84 Q14,64 24,116 Q42,98 60,104 Z" fill="#fff" opacity=".9"/><path d="M84,84 Q126,64 116,116 Q98,98 80,104 Z" fill="#fff" opacity=".9"/>`;}
+  // head-piece by class
+  let head='';const cls=state.klass;
+  if(cls==='assassin'){head=`<path d="M53,60 Q52,38 70,36 Q88,38 87,60 Q79,50 70,50 Q61,50 53,60 Z" fill="${pal.p}"/><rect x="56" y="57" width="28" height="7" rx="2" fill="${pal.s}"/><circle cx="64" cy="60.5" r="1.7" fill="${pal.t}"/><circle cx="76" cy="60.5" r="1.7" fill="${pal.t}"/>`;}
+  else if(cls==='chevalier'){head=`<path d="M55,58 Q55,39 70,39 Q85,39 85,58 L82,58 L82,50 L58,50 L58,58 Z" fill="${pal.p}" stroke="${pal.s}" stroke-width="1.5"/><rect x="58" y="53" width="24" height="4" fill="${pal.s}"/><rect x="68" y="30" width="4" height="12" rx="2" fill="${pal.t}"/><path d="M70,30 q8,-6 12,2 q-8,-1 -12,4z" fill="${pal.t}"/>`;}
+  else if(cls==='faucheur'){head=`<path d="M52,62 Q51,34 70,33 Q89,34 88,62 Q80,50 70,50 Q60,50 52,62 Z" fill="${pal.p}"/><circle cx="70" cy="60" r="11" fill="#e9e6d8"/><circle cx="65" cy="59" r="2.4" fill="#0a0a0a"/><circle cx="75" cy="59" r="2.4" fill="#0a0a0a"/><path d="M67,66 l2,3 2,-3 2,3 2,-3" fill="none" stroke="#0a0a0a" stroke-width="1"/>`;}
+  else if(cls==='sorcier'){head=`<ellipse cx="70" cy="66" rx="19" ry="5" fill="${pal.s}"/><polygon points="70,24 85,66 55,66" fill="${pal.p}"/><path d="M70,24 q10,20 15,42 q-15,-8 -15,-8z" fill="#ffffff" opacity=".12"/><text x="66" y="46" font-size="10" fill="${pal.t}">✦</text><circle cx="64" cy="61" r="1.6" fill="#2a2a2a"/><circle cx="76" cy="61" r="1.6" fill="#2a2a2a"/>`;}
+  else{head=`<path d="M56,58 Q58,44 70,44 Q82,44 84,58 Q77,51 70,51 Q63,51 56,58 Z" fill="#6a4a30"/><circle cx="64" cy="61" r="1.6" fill="#2a2a2a"/><circle cx="76" cy="61" r="1.6" fill="#2a2a2a"/>`;}
+  const sh=9+tier;
+  return `<svg viewBox="0 0 140 176" class="heroSvg" xmlns="http://www.w3.org/2000/svg">${auraSvg}${winSvg}${parts}
+    <rect x="60" y="126" width="8" height="30" rx="4" fill="${pal.s}"/><rect x="72" y="126" width="8" height="30" rx="4" fill="${pal.s}"/>
+    <rect x="44" y="86" width="10" height="34" rx="5" fill="${pal.s}"/>
+    <path d="M50,84 Q70,78 90,84 L86,128 Q70,134 54,128 Z" fill="${pal.p}" stroke="${pal.s}" stroke-width="2"/>
+    <rect x="52" y="119" width="36" height="7" rx="3" fill="${pal.t}"/>
+    <polygon points="70,92 78,101 70,117 62,101" fill="${pal.t}" opacity=".85"/>
+    <ellipse cx="52" cy="86" rx="${sh}" ry="${sh-1}" fill="${pal.s}"/><ellipse cx="88" cy="86" rx="${sh}" ry="${sh-1}" fill="${pal.s}"/>
+    <rect x="86" y="86" width="10" height="30" rx="5" fill="${pal.s}"/>
+    <g transform="translate(99,98)">${weaponSVG(w.type,w.mat)}</g>
+    <rect x="65" y="70" width="10" height="9" fill="${pal.skin}"/>
+    <circle cx="70" cy="60" r="15" fill="${pal.skin}"/>
+    ${head}
+  </svg>`;
+}
+
 /* ---------- combat / arena ---------- */
 let CB=null, autoTimer=null;
 function ensureBattle(){const hs=heroStats();const mob=mobAt(state.floor);if(!CB||CB.floor!==state.floor){CB={floor:state.floor,hp:hs.pvmax,mobHP:mob.hp,busy:false};}CB.hp=Math.min(CB.hp,hs.pvmax);}
-function renderArena(){ensureDay();ensureBattle();const hs=heroStats();const mob=mobAt(state.floor);const arm=equippedArmor(),wep=equippedWeapon(),amu=equippedAmulet();const hpPct=Math.max(0,CB.hp/hs.pvmax*100),mPct=Math.max(0,CB.mobHP/mob.hp*100);
+function renderArena(){ensureDay();ensureBattle();const hs=heroStats();const mob=mobAt(state.floor);const k=klass();const hpPct=Math.max(0,CB.hp/hs.pvmax*100),mPct=Math.max(0,CB.mobHP/mob.hp*100);
+  const canChoose=state.klass==='novice'&&hs.level>=CLASS_UNLOCK_LEVEL;
+  const banner=canChoose?`<button class="class-banner" id="chooseClassBtn">⚔️ Niveau ${CLASS_UNLOCK_LEVEL} atteint — <b>choisis ta classe !</b> ›</button>`:'';
   $('#view-arene').innerHTML=`
    <div class="arena-head"><span class="floor-badge">⚔️ Étage <b>${state.floor}</b></span><span class="cur or">🪙 ${nf.format(state.gold)}</span><span class="cur bk">✦ ${nf.format(state.baraka)}</span></div>
+   ${banner}
    <div class="arena">
-     <div class="fighter hero"><div class="hpwrap"><div class="hp hero"><i style="width:${hpPct}%"></i></div><div class="hptext">${Math.max(0,Math.ceil(CB.hp))} / ${hs.pvmax} PV</div></div><div class="fbody" id="heroBody" style="--ag1:${arm.c[0]};--ag2:${arm.c[1]}">🧍<span class="wep">${wep.ic}</span>${amu?`<span class="amu">${amu.ic}</span>`:''}</div><div class="fname">Toi · Nv ${hs.level}</div></div>
+     <div class="fighter hero"><div class="hpwrap"><div class="hp hero"><i style="width:${hpPct}%"></i></div><div class="hptext">${Math.max(0,Math.ceil(CB.hp))} / ${hs.pvmax} PV</div></div><div class="fbody herofig" id="heroBody">${drawHero()}</div><div class="fname">${k.emoji} ${k.name} · Nv ${hs.level}</div></div>
      <div class="vs">⚔️</div>
      <div class="fighter mob"><div class="hpwrap"><div class="hp mob"><i style="width:${mPct}%"></i></div><div class="hptext">${Math.max(0,Math.ceil(CB.mobHP))} / ${mob.hp} PV</div></div><div class="fbody ${mob.boss?'boss':''}" id="mobBody">${mob.emoji}</div><div class="fname">${mob.name}</div></div>
    </div>
@@ -579,12 +691,17 @@ function updateBattleUI(){const hs=heroStats(),mob=mobAt(state.floor);const hi=d
 function animateAttack(who){const el=$(who==='hero'?'#heroBody':'#mobBody');if(el){const cls=who==='hero'?'lunge-r':'lunge-l';el.classList.add(cls);setTimeout(()=>el.classList.remove(cls),160);}const foe=$(who==='hero'?'#mobBody':'#heroBody');if(foe){foe.classList.add('hit');setTimeout(()=>foe.classList.remove('hit'),300);}}
 function floatDmg(who,text,crit,positive){const f=$(who==='hero'?'.fighter.hero':'.fighter.mob');if(!f)return;const d=document.createElement('div');d.className='dmg'+(crit?' crit':'');d.textContent=(typeof text==='number'?('-'+text):text);d.style.color=positive?'#39D39B':(who==='hero'?'#FF6B7A':(crit?'#FFD36B':'#fff'));f.appendChild(d);setTimeout(()=>d.remove(),820);}
 function attack(){ensureBattle();if(CB.busy)return;const hs=heroStats(),mob=mobAt(state.floor);const crit=Math.random()*100<hs.crit;const dmg=Math.max(1,Math.round(hs.atk*(crit?2:1)*(0.85+Math.random()*0.3)));CB.mobHP-=dmg;animateAttack('hero');floatDmg('mob',dmg,crit,false);beep(crit?720:520,.06,'square',.07);vibrate(crit?24:9);if(CB.mobHP<=0){CB.mobHP=0;updateBattleUI();victory(mob);return;}const mdmg=Math.max(1,Math.round((mob.atk-hs.def)*(0.85+Math.random()*0.3)));CB.hp-=mdmg;setTimeout(()=>{animateAttack('mob');floatDmg('hero',mdmg,false,false);},150);if(CB.hp<=0){CB.hp=0;updateBattleUI();setTimeout(defeat,320);return;}updateBattleUI();}
-function victory(mob){CB.busy=true;state.gold+=mob.gold;ensureDay();state.daily.kills=(state.daily.kills||0)+1;const mb=$('#mobBody');if(mb)mb.classList.add('dead');floatDmg('mob','+'+mob.gold+' 🪙',true,true);beep(880,.18,'triangle',.14);burst(mob.boss?90:28);updateBaraka();save();setTimeout(()=>{state.floor++;CB=null;save();renderArena();toast(mob.boss?('👑 Boss vaincu ! +'+mob.gold+' or'):('Vaincu ! +'+mob.gold+' or'));},520);}
+function victory(mob){CB.busy=true;state.gold+=mob.gold;ensureDay();state.daily.kills=(state.daily.kills||0)+1;life().kills++;const mb=$('#mobBody');if(mb)mb.classList.add('dead');floatDmg('mob','+'+mob.gold+' 🪙',true,true);beep(880,.18,'triangle',.14);burst(mob.boss?90:28);updateBaraka();save();setTimeout(()=>{state.floor++;if(state.floor>state.floorMax)state.floorMax=state.floor;CB=null;save();renderArena();toast(mob.boss?('👑 Boss vaincu ! +'+mob.gold+' or'):('Vaincu ! +'+mob.gold+' or'));},520);}
 function defeat(){CB.busy=true;stopAuto();const hb=$('#heroBody');if(hb)hb.classList.add('flash');beep(200,.3,'sawtooth',.1);const hs=heroStats(),mob=mobAt(state.floor);setTimeout(()=>{CB={floor:state.floor,hp:hs.pvmax,mobHP:mob.hp,busy:false};renderArena();toast('💀 Vaincu ! Renforce-toi : prières, quiz, ou meilleur équipement.');},650);}
 function toggleAuto(){if(autoTimer){stopAuto();}else{autoTimer=setInterval(()=>{if($('#view-arene').classList.contains('hidden')){return;}if(CB&&CB.busy)return;attack();},620);}renderArena();}
 function stopAuto(){if(autoTimer){clearInterval(autoTimer);autoTimer=null;}}
-function buyGear(id){const it=itemById(id);if(!it||state.owned.includes(id)||state.gold<it.cost||heroStats().level<it.req)return;state.gold-=it.cost;state.owned.push(id);state.gear[it.slot]=id;CB=null;save();updateBaraka();renderShop();renderArena();burst(40);beep(900,.18,'triangle',.15);vibrate(30);toast('🛡️ '+it.name+' acheté et équipé !');}
-function equipGear(id){const it=itemById(id);if(!it||!state.owned.includes(id))return;state.gear[it.slot]=id;CB=null;save();renderShop();renderArena();beep(760,.12);toast('Équipé : '+it.name);}
+function findGear(id){return WEAPONS.find(w=>w.id===id)||ARMORS.find(a=>a.id===id);}
+function gearSlot(it){return WEAPONS.includes(it)?'weapon':'armor';}
+function buyGear(id){const it=findGear(id);if(!it||state.owned.includes(id)||state.gold<it.cost||heroLevel()<(it.req||0))return;state.gold-=it.cost;state.owned.push(id);state.gear[gearSlot(it)]=id;CB=null;save();updateBaraka();renderShop();renderArena();burst(40);beep(900,.18,'triangle',.15);vibrate(30);toast('✅ '+it.name+' acheté et équipé !');}
+function equipGear(id){const it=findGear(id);if(!it||!state.owned.includes(id))return;state.gear[gearSlot(it)]=id;CB=null;save();renderShop();renderArena();beep(760,.12);toast('Équipé : '+it.name);}
+function chooseClass(id){if(!CLASSES[id]||state.klass!=='novice')return;state.klass=id;const first=WEAPONS.find(w=>w.cls===id);if(first){if(!state.owned.includes(first.id))state.owned.push(first.id);state.gear.weapon=first.id;}CB=null;save();hideModal();renderArena();renderShop();burst(70);beep(1000,.25,'triangle',.16);toast(CLASSES[id].emoji+' Tu es désormais '+CLASSES[id].name+' !');}
+function equipSkin(id){const s=SKINS.find(x=>x.id===id);if(!s||!skinUnlocked(s))return;state.skin=id;CB=null;save();renderShop();renderArena();burst(40);beep(880,.16,'triangle',.15);toast('✨ Skin équipé : '+s.name);}
+function openClassModal(){const cards=Object.keys(CLASSES).filter(id=>id!=='novice').map(id=>{const c=CLASSES[id];const pal=CLASS_PAL[id];return`<div class="class-card" data-pickclass="${id}"><div class="class-em" style="background:linear-gradient(160deg,${pal.p},${pal.s})">${c.emoji}</div><div class="class-info"><div class="class-n">${c.name}</div><div class="class-d">${c.desc}</div></div><div class="lgo">›</div></div>`;}).join('');modal.innerHTML=`<div class="modal-top"><button class="icon-btn" data-close>←</button><div class="mt-title">Choisis ta classe</div></div><div class="modal-body"><p class="muted-note" style="margin-top:0">Ce choix est <b>définitif</b> et débloque un arbre d'armes unique. Tu reçois ta première arme gratuitement.</p><div class="class-list">${cards}</div></div>`;showModal();}
 function buyBoost(){if(state.baraka<BOOST_COST)return;state.baraka-=BOOST_COST;state.boostDay=todayKey();save();updateBaraka();renderShop();renderArena();burst(40);beep(1000,.2,'triangle',.16);toast('⚡ Journée bénie activée — points ×2 !');}
 
 /* ---------- render: day ---------- */
@@ -593,7 +710,18 @@ function renderDay(){ensureDay();$('#questBox').innerHTML=renderQuests();let h='
 
 /* ---------- render: evo ---------- */
 function renderPrayerSetup(){const box=$('#prayerSetup');const set=state.prayerTimes&&state.prayerTimes.day===todayKey();if(set){const T=state.prayerTimes.times;box.innerHTML=`<div class="pdesc">Après l’heure de chaque prière, tu as <b>1h pour la valider</b>, sinon c’est « trop tard ». Actualisé chaque jour selon ta position.</div><div class="ptimes">${PRAYER_IDS.map(p=>`<span class="ptime"><b>${p[0].toUpperCase()+p.slice(1)}</b> ${T[p]}</span>`).join('')}</div><div class="prow"><button class="btn ghost" id="prayerAuto">📍 Actualiser</button><button class="btn ghost" id="prayerClear">Désactiver</button></div>`;}else{box.innerHTML=`<div class="pdesc">Active un <b>chrono de prière</b> : à partir de l’heure de chaque prière tu as 1h pour la valider. Sans ça, tu peux valider à tout moment.</div><div class="prow"><button class="btn" id="prayerAuto">📍 Utiliser ma position</button><button class="btn ghost" id="prayerManual">✎ Saisir à la main</button></div><div class="pt-form" id="ptForm">${PRAYER_IDS.map(p=>`<label>${p[0].toUpperCase()+p.slice(1)}<input type="time" id="pf-${p}"></label>`).join('')}<button class="btn" id="ptSave">Enregistrer mes horaires</button></div>`;}}
-function renderShop(){const hl=heroStats().level;let h='';for(const [slot,label,ic] of SLOTS){h+=`<div class="sec-label">${ic} ${label}</div><div class="gear-list">`;for(const it of ITEMS.filter(x=>x.slot===slot)){const owned=state.owned.includes(it.id);const eq=state.gear[slot]===it.id;const stats=[it.atk?`🗡️+${it.atk}`:'',it.pv?`❤️+${it.pv}`:'',it.def?`🛡️+${it.def}`:'',it.crit?`✦+${it.crit}%`:''].filter(Boolean).join(' · ');let btn;if(eq)btn='<button class="gbtn on" disabled>Équipé ✓</button>';else if(owned)btn=`<button class="gbtn" data-equip="${it.id}">Équiper</button>`;else if(hl<it.req)btn=`<button class="gbtn lock" disabled>🔒 Nv ${it.req}</button>`;else if(state.gold>=it.cost)btn=`<button class="gbtn buy" data-buygear="${it.id}">🪙 ${nf.format(it.cost)}</button>`;else btn=`<button class="gbtn lock" disabled>🪙 ${nf.format(it.cost)}</button>`;const prev=it.c?`background:linear-gradient(160deg,${it.c[0]},${it.c[1]})`:'background:var(--surface-2)';h+=`<div class="gear ${eq?'eq':''}"><div class="gic" style="${prev}">${it.ic}</div><div class="gmain"><div class="gn">${it.name}</div><div class="gs">${stats||'—'}</div></div>${btn}</div>`;}h+='</div>';}
+function gearRow(it,stats,hl){const owned=state.owned.includes(it.id);const eq=state.gear.weapon===it.id||state.gear.armor===it.id;const ic=it.type?`<svg viewBox="-22 -34 44 74" style="width:100%;height:100%"><g transform="translate(0,8)">${weaponSVG(it.type,it.mat)}</g></svg>`:'🛡️';let btn;if(eq)btn='<button class="gbtn on" disabled>Équipé ✓</button>';else if(owned)btn=`<button class="gbtn" data-equip="${it.id}">Équiper</button>`;else if(hl<(it.req||0))btn=`<button class="gbtn lock" disabled>🔒 Nv ${it.req}</button>`;else if(state.gold>=it.cost)btn=`<button class="gbtn buy" data-buygear="${it.id}">🪙 ${nf.format(it.cost)}</button>`;else btn=`<button class="gbtn lock" disabled>🪙 ${nf.format(it.cost)}</button>`;return`<div class="gear ${eq?'eq':''}"><div class="gic"${it.type?'':' style="background:var(--surface-2)"'}>${ic}</div><div class="gmain"><div class="gn">${it.name}</div><div class="gs">${stats}</div></div>${btn}</div>`;}
+function renderShop(){const hl=heroLevel();const k=klass();const kp=CLASS_PAL[state.klass];let h='';
+  h+=`<div class="sec-label">Classe</div><div class="gear"><div class="gic" style="background:linear-gradient(160deg,${kp.p},${kp.s});color:#fff">${k.emoji}</div><div class="gmain"><div class="gn">${k.name}</div><div class="gs">${k.desc}</div></div>${state.klass==='novice'?(hl>=CLASS_UNLOCK_LEVEL?'<button class="gbtn buy" id="chooseClassBtn2">Choisir</button>':`<button class="gbtn lock" disabled>🔒 Nv ${CLASS_UNLOCK_LEVEL}</button>`):''}</div>`;
+  h+=`<div class="sec-label">🗡️ Armes${state.klass!=='novice'?' · voie du '+k.name:''}</div><div class="gear-list">`;
+  for(const w of WEAPONS.filter(w=>w.cls==='novice'||w.cls===state.klass))h+=gearRow(w,'🗡️ +'+w.atk+(w.crit?(' · ✦ +'+w.crit+'%'):''),hl);
+  h+='</div>';if(state.klass==='novice')h+=`<p class="muted-note">Choisis ta classe (niveau ${CLASS_UNLOCK_LEVEL}) pour débloquer un arbre d'armes de fou.</p>`;
+  h+=`<div class="sec-label">🛡️ Armures</div><div class="gear-list">`;
+  for(const a of ARMORS)h+=gearRow(a,'❤️ +'+a.pv+' · 🛡️ +'+a.def,hl);
+  h+='</div>';
+  h+=`<div class="sec-label">✨ Skins — collection</div><div class="gear-list">`;
+  for(const s of SKINS){const un=skinUnlocked(s);const eq=state.skin===s.id;const grad=s.pal?`linear-gradient(160deg,${s.pal.p},${s.pal.s})`:'var(--surface-2)';let btn;if(eq)btn='<button class="gbtn on" disabled>Équipé ✓</button>';else if(un)btn=`<button class="gbtn buy" data-skin="${s.id}">Équiper</button>`;else btn='<button class="gbtn lock" disabled>🔒</button>';h+=`<div class="gear ${eq?'eq':''}"><div class="gic skinic" style="background:${grad};color:${s.aura?s.aura.c:'var(--muted)'}">${s.aura?'✦':'○'}</div><div class="gmain"><div class="gn">${s.name}${s.rarity!=='—'?` <span class="rar rar-${s.rarity}">${s.rarity}</span>`:''}</div><div class="gs">${un?(eq?'équipé':'débloqué — clique pour équiper'):('🔒 '+s.hint)}</div></div>${btn}</div>`;}
+  h+='</div>';
   const ba=boostActive();h+=`<div class="sec-label">✦ Bonus (Baraka)</div><div class="boost"><div class="bi">⚡</div><div class="bm"><div class="bn">Journée bénie ×2</div><div class="bd">${ba?'Actif — points doublés aujourd’hui':'Double les points gagnés aujourd’hui.'}</div></div>${ba?'<span class="qdone">✓ actif</span>':`<button class="btn ${state.baraka>=BOOST_COST?'gold':'ghost'}" id="buyBoost" ${state.baraka<BOOST_COST?'disabled':''}>✦${BOOST_COST}</button>`}</div>`;
   $('#shopMain').innerHTML=h;renderPrayerSetup();updateBaraka();}
 function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
@@ -608,19 +736,19 @@ function buildRecap(){const cat=state.cats.find(c=>c.id===SESS.cat)||{color:'var
 /* counter */
 function openCounter(taskId){const t=state.tasks.find(x=>x.id===taskId);startSess(t.cat,'dhikr');CT={idx:0,count:0,taskId,cat:t.cat};buildCounter();showModal();}
 function buildCounter(){const cat=state.cats.find(c=>c.id===CT.cat),d=DHIKR[CT.idx],tar=d.target,per=dhikrPts(tar),pct=CT.count/tar*100;modal.innerHTML=`<div class="modal-top"><button class="icon-btn" data-close>←</button><div class="mt-title">📿 Dhikr</div></div><div class="modal-body count-wrap" style="--cc:${cat.color}"><div><div class="dhikr-ar">${d.ar}</div><div class="dhikr-tr">${d.tr}</div><div class="dhikr-fr">« ${d.fr} »</div></div><div class="dhikr-pick">${DHIKR.map((x,i)=>`<button class="dp ${i===CT.idx?'on':''}" data-dh="${i}">${x.tr} · ${x.target}</button>`).join('')}</div><div class="ring" id="ringEl" style="--p:${pct}"><div class="inner"><div class="cnum" id="cnum">${CT.count}</div><div class="ctar">/ ${tar}</div><div class="ctap">tape pour compter</div></div></div><div class="per-line">Cycle de ${tar} = +${per} Âme</div><div class="cyc-line">Cycles : <b id="cyc">${SESS.cycles}</b></div><div class="count-actions"><button class="btn ghost" data-reset>↺ 0</button><button class="btn" data-close style="background:${cat.color}">Terminer</button></div></div>`;}
-function ringTap(){const d=DHIKR[CT.idx],tar=d.target;CT.count++;SESS.dhikr++;if(CT.count>=tar){CT.count=0;SESS.cycles++;ensureDay();state.daily.dhikr+=tar;award(CT.cat,dhikrPts(tar),$('#ringEl'));save();vibrate([30,40,30]);beep(920,.18,'triangle',.15);burst(40);}else{beep(560+CT.count*4,.05,'sine',.09);vibrate(12);}const ring=$('#ringEl');if(ring){ring.style.setProperty('--p',(CT.count/tar*100));$('#cnum').textContent=CT.count;$('#cyc').textContent=SESS.cycles;}}
+function ringTap(){const d=DHIKR[CT.idx],tar=d.target;CT.count++;SESS.dhikr++;if(CT.count>=tar){CT.count=0;SESS.cycles++;ensureDay();state.daily.dhikr+=tar;life().dhikr+=tar;award(CT.cat,dhikrPts(tar),$('#ringEl'));save();vibrate([30,40,30]);beep(920,.18,'triangle',.15);burst(40);}else{beep(560+CT.count*4,.05,'sine',.09);vibrate(12);}const ring=$('#ringEl');if(ring){ring.style.setProperty('--p',(CT.count/tar*100));$('#cnum').textContent=CT.count;$('#cyc').textContent=SESS.cycles;}}
 function pickDhikr(i){CT.idx=i;CT.count=0;buildCounter();}
 
 /* reader */
 function openReader(taskId){const t=state.tasks.find(x=>x.id===taskId);startSess(t.cat,t.lib);RD={kind:t.lib,cat:t.cat,taskId};if(t.lib==='coran'){RD.si=Math.floor(Math.random()*CORAN.length);RD.vi=0;buildVerse();}else{RD.view='lib';buildReaderLib();}showModal();}
 function buildVerse(){const cat=state.cats.find(c=>c.id===RD.cat),s=CORAN[RD.si],v=s.v[RD.vi];modal.innerHTML=`<div class="modal-top"><button class="icon-btn" data-close>←</button><div class="mt-title">${s.t}</div></div><div class="modal-body" style="--cc:${cat.color}"><div class="reader-page arabic"><div class="vhead">${s.t.split(' — ')[0]} · verset ${RD.vi+1}/${s.v.length}</div><div class="ar">${v[0]}</div><div class="tr">${v[1]}</div><div class="fr">${v[2]}</div></div><button class="btn bignext" data-nextverse style="background:${cat.color}">Suivant ›</button><p class="muted-note">Chaque verset lu = +${PPP.coranVerse} Foi. Reviens en arrière (←) pour voir ton récap.</p></div>`;}
-function nextVerse(){ensureDay();const s=CORAN[RD.si];award(RD.cat,PPP.coranVerse,null);SESS.verses++;state.daily.verses++;if(RD.vi>=s.v.length-1){state.daily.surahs++;SESS.surahs++;RD.si=Math.floor(Math.random()*CORAN.length);RD.vi=0;}else RD.vi++;save();beep(600,.05,'sine',.08);vibrate(10);buildVerse();}
+function nextVerse(){ensureDay();const s=CORAN[RD.si];award(RD.cat,PPP.coranVerse,null);SESS.verses++;state.daily.verses++;life().verses++;if(RD.vi>=s.v.length-1){state.daily.surahs++;SESS.surahs++;RD.si=Math.floor(Math.random()*CORAN.length);RD.vi=0;}else RD.vi++;save();beep(600,.05,'sine',.08);vibrate(10);buildVerse();}
 function buildReaderLib(){const cat=state.cats.find(c=>c.id===RD.cat);modal.innerHTML=`<div class="modal-top"><button class="icon-btn" data-close>←</button><div class="mt-title">📖 Lecture</div></div><div class="modal-body"><div class="lib">${ESPRIT.map((it,i)=>{const read=state.daily.readToday['e'+i];return`<div class="libitem ${read?'read':''}" data-open="${i}" style="--cc:${cat.color}"><div class="lt"><div class="ltn">${it.title}</div><div class="lts">${read?'déjà lu aujourd’hui':it.pages.length+' pages'}</div></div><div class="lgo">›</div></div>`;}).join('')}</div><p class="muted-note">Tes pages lues font monter ton Esprit. Reviens (←) pour ton récap.</p></div>`;}
 function openReaderItem(i){RD.bi=i;RD.item=ESPRIT[i];RD.page=0;RD.max=0;buildReaderPage();}
 function buildReaderPage(){const cat=state.cats.find(c=>c.id===RD.cat),it=RD.item,tot=it.pages.length,last=RD.page>=tot-1;modal.innerHTML=`<div class="modal-top"><button class="icon-btn" data-backlib>←</button><div class="mt-title">${it.title}</div></div><div class="modal-body" style="--cc:${cat.color}"><div class="reader-page"><div class="fr" style="text-align:left">${it.pages[RD.page]}</div></div><div class="reader-nav"><button class="btn ghost" data-prev ${RD.page===0?'disabled':''}>‹</button><span class="pg">page ${RD.page+1} / ${tot}</span>${last?`<button class="btn" data-finishbook style="background:${cat.color}">Terminer (+${(RD.max+1)*PPP.esprit})</button>`:'<button class="btn" data-next>Suivant ›</button>'}</div></div>`;}
 function readerNext(){if(RD.page<RD.item.pages.length-1){RD.page++;RD.max=Math.max(RD.max,RD.page);beep(600,.05,'sine',.08);buildReaderPage();}}
 function readerPrev(){if(RD.page>0){RD.page--;buildReaderPage();}}
-function finishBook(){ensureDay();const pages=RD.max+1;const g=award(RD.cat,pages*PPP.esprit,$('#barakaChip'));state.daily.pages+=pages;state.daily.readToday['e'+RD.bi]=true;save();toast('📖 '+pages+' page'+(pages>1?'s':'')+' · +'+g+' Esprit');beep(900,.16,'triangle',.14);buildReaderLib();}
+function finishBook(){ensureDay();const pages=RD.max+1;const g=award(RD.cat,pages*PPP.esprit,$('#barakaChip'));state.daily.pages+=pages;life().pages+=pages;state.daily.readToday['e'+RD.bi]=true;save();toast('📖 '+pages+' page'+(pages>1?'s':'')+' · +'+g+' Esprit');beep(900,.16,'triangle',.14);buildReaderLib();}
 
 /* learn + quiz */
 let LR=null;
@@ -634,10 +762,11 @@ function startQuiz(){LR.qi=0;LR.correct=0;LR.answered=false;LR.chosen=-1;buildQu
 function buildQuiz(){const cat=state.cats.find(c=>c.id===LR.cat),l=LR.lesson,q=l.quiz[LR.qi];const opts=q.opts.map((o,i)=>{let cls='';if(LR.answered){if(i===q.a)cls='correct';else if(i===LR.chosen)cls='wrong';}return`<button class="qopt ${cls}" data-opt="${i}" ${LR.answered?'disabled':''}>${escapeHtml(o)}</button>`;}).join('');const feed=LR.answered?(LR.chosen===q.a?`<div class="qfeed" style="color:var(--good)">✓ Bonne réponse !</div>`:`<div class="qfeed" style="color:var(--danger)">✗ Raté — la bonne réponse est en vert</div>`):'';modal.innerHTML=`<div class="modal-top"><button class="icon-btn" data-close>←</button><div class="mt-title">${l.emoji} Quiz</div></div><div class="modal-body" style="--cc:${cat.color}"><div class="qprog">Question ${LR.qi+1} / ${l.quiz.length} · ${LR.correct} ✓</div><div class="quiz"><div class="qq">${escapeHtml(q.q)}</div><div class="qopts">${opts}</div>${feed}${LR.answered?`<button class="btn" data-nextq style="background:${cat.color};margin-top:4px">${LR.qi>=l.quiz.length-1?'Voir mon score 🎉':'Question suivante ›'}</button>`:''}</div></div>`;}
 function answerQuiz(idx){if(LR.answered)return;LR.answered=true;LR.chosen=idx;const q=LR.lesson.quiz[LR.qi];if(idx===q.a){LR.correct++;beep(880,.14,'triangle',.14);vibrate(20);}else{beep(300,.14,'sine',.12);vibrate([20,40]);}buildQuiz();}
 function nextQuiz(){if(LR.qi>=LR.lesson.quiz.length-1){finishQuiz();return;}LR.qi++;LR.answered=false;LR.chosen=-1;buildQuiz();}
-function finishQuiz(){ensureDay();const per=LESSON_PTS[LR.set];award(LR.cat,LR.correct*per,null);SESS.correct=LR.correct;SESS.total=LR.lesson.quiz.length;state.daily.quiz+=LR.correct;state.daily.readToday[LR.set+LR.li]=LR.correct+'/'+LR.lesson.quiz.length;save();buildRecap();}
+function finishQuiz(){ensureDay();const per=LESSON_PTS[LR.set];award(LR.cat,LR.correct*per,null);SESS.correct=LR.correct;SESS.total=LR.lesson.quiz.length;state.daily.quiz+=LR.correct;life().quiz+=LR.correct;state.daily.readToday[LR.set+LR.li]=LR.correct+'/'+LR.lesson.quiz.length;save();buildRecap();}
 
 /* ---------- events ---------- */
 modal.addEventListener('click',e=>{const t=e.target;if(t.closest('[data-recapclose]')){hideModal();return;}if(t.closest('[data-close]')){closeModal();return;}if(t.closest('[data-reset]')){CT.count=0;buildCounter();return;}const dh=t.closest('[data-dh]');if(dh){pickDhikr(+dh.getAttribute('data-dh'));return;}if(t.closest('#ringEl')){ringTap();return;}if(t.closest('[data-nextverse]')){nextVerse();return;}if(t.closest('[data-backlib]')){buildReaderLib();return;}const op=t.closest('[data-open]');if(op){openReaderItem(+op.getAttribute('data-open'));return;}if(t.closest('[data-next]')){readerNext();return;}if(t.closest('[data-prev]')){readerPrev();return;}if(t.closest('[data-finishbook]')){finishBook();return;}
+  const pc=t.closest('[data-pickclass]');if(pc){chooseClass(pc.getAttribute('data-pickclass'));return;}
   if(t.closest('[data-backlearnlib]')){buildLearnLib();return;}const ol=t.closest('[data-openlesson]');if(ol){openLesson(+ol.getAttribute('data-openlesson'));return;}if(t.closest('[data-teachnext]')){teachNext();return;}if(t.closest('[data-teachprev]')){teachPrev();return;}if(t.closest('[data-startquiz]')){startQuiz();return;}const qo=t.closest('[data-opt]');if(qo){answerQuiz(+qo.getAttribute('data-opt'));return;}if(t.closest('[data-nextq]')){nextQuiz();return;}});
 $('#taskGroups').addEventListener('click',e=>{const del=e.target.closest('[data-del]');if(del){const id=del.getAttribute('data-del');state.tasks=state.tasks.filter(t=>t.id!==id);delete state.done[id];save();renderDay();renderArena();return;}if($('#view-day').classList.contains('editing'))return;const cnt=e.target.closest('[data-counter]');if(cnt){openCounter(cnt.getAttribute('data-counter'));return;}const rd=e.target.closest('[data-reader]');if(rd){openReader(rd.getAttribute('data-reader'));return;}const ln=e.target.closest('[data-learn]');if(ln){openLearn(ln.getAttribute('data-learn'));return;}const task=e.target.closest('[data-id]');if(task){const id=task.getAttribute('data-id');if(PRAYER_IDS.includes(id)&&!state.done[id]){const s=prayerStatus(id);if(s.state==='soon'){toast('🕐 Pas encore l’heure — à '+s.at);beep(300,.1);return;}if(s.state==='late'){toast('⌛ Trop tard pour valider cette prière');beep(300,.1);return;}}toggleTask(id,task);return;}if(e.target.closest('#eurAdd')){const v=parseFloat($('#eurInput').value);if(v>0){addEuros(Math.round(v));$('#eurInput').value='';}return;}const chip=e.target.closest('[data-eur]');if(chip)addEuros(parseInt(chip.getAttribute('data-eur')));});
 $('#questBox').addEventListener('click',e=>{const q=e.target.closest('[data-quest]');if(q){const qq=todayQuests().find(x=>x.id===q.getAttribute('data-quest'));if(qq)claimQuest(qq);}});
@@ -645,8 +774,8 @@ $('#editToggle').addEventListener('click',()=>{const v=$('#view-day');v.classLis
 $('#ntAdd').addEventListener('click',()=>{const name=$('#ntName').value.trim();const pts=parseInt($('#ntPts').value)||10;const cat=$('#ntCat').value;if(!name)return;state.tasks.push({id:'t'+(state.seq++),cat,name,pts:Math.max(1,Math.min(999,pts)),type:'check'});save();$('#ntName').value='';renderDay();beep(700,.1);});
 $('#addCatBtn').addEventListener('click',()=>$('#addCatForm').classList.toggle('hidden'));
 $('#ncAdd').addEventListener('click',()=>{const name=$('#ncName').value.trim();if(!name)return;const emoji=$('#ncEmoji').value.trim()||'⭐';const color=$('#ncColor').value;const id='c'+(state.seq++);state.cats.push({id,name,emoji,color,type:'xp'});state.xp[id]=0;save();$('#ncName').value='';$('#ncEmoji').value='';$('#addCatForm').classList.add('hidden');renderAll();toast(emoji+' Catégorie « '+name+' » créée');});
-$('#view-arene').addEventListener('click',e=>{if(e.target.closest('#attackBtn')){attack();return;}if(e.target.closest('#autoBtn')){toggleAuto();return;}});
-$('#shopMain').addEventListener('click',e=>{const bg=e.target.closest('[data-buygear]');if(bg){buyGear(bg.getAttribute('data-buygear'));return;}const eq=e.target.closest('[data-equip]');if(eq){equipGear(eq.getAttribute('data-equip'));return;}if(e.target.closest('#buyBoost')){buyBoost();return;}});
+$('#view-arene').addEventListener('click',e=>{if(e.target.closest('#attackBtn')){attack();return;}if(e.target.closest('#autoBtn')){toggleAuto();return;}if(e.target.closest('#chooseClassBtn')){openClassModal();return;}});
+$('#shopMain').addEventListener('click',e=>{const bg=e.target.closest('[data-buygear]');if(bg){buyGear(bg.getAttribute('data-buygear'));return;}const eq=e.target.closest('[data-equip]');if(eq){equipGear(eq.getAttribute('data-equip'));return;}const sk=e.target.closest('[data-skin]');if(sk){equipSkin(sk.getAttribute('data-skin'));return;}if(e.target.closest('#chooseClassBtn2')){openClassModal();return;}if(e.target.closest('#buyBoost')){buyBoost();return;}});
 $('#prayerSetup').addEventListener('click',e=>{if(e.target.closest('#prayerAuto')){setupPrayerAuto();return;}if(e.target.closest('#prayerManual')){$('#ptForm').classList.toggle('show');return;}if(e.target.closest('#prayerClear')){state.prayerTimes=null;state.geo=null;save();renderPrayerSetup();renderDay();toast('Chrono de prière désactivé');return;}if(e.target.closest('#ptSave')){const T={};let ok=true;for(const p of PRAYER_IDS){const val=$('#pf-'+p).value;if(!val){ok=false;break;}T[p]=val;}if(!ok){toast('Remplis les 5 horaires');return;}state.prayerTimes={day:todayKey(),times:T};save();renderPrayerSetup();renderDay();toast('⏱ Horaires enregistrés');}});
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');const tab=t.getAttribute('data-tab');$('#view-arene').classList.toggle('hidden',tab!=='arene');$('#view-day').classList.toggle('hidden',tab!=='day');$('#view-shop').classList.toggle('hidden',tab!=='shop');if(tab!=='arene')stopAuto();if(tab==='arene')renderArena();if(tab==='day')renderDay();if(tab==='shop')renderShop();scrollTo({top:0,behavior:'smooth'});}));
 function setTheme(t){state.theme=t;document.documentElement.setAttribute('data-theme',t);$('#themeBtn').textContent=t==='dark'?'☀️':'🌙';const m=document.querySelector('meta[name=theme-color]');if(m)m.content=(t==='dark'?'#0E0D18':'#F5F4FA');save();}
