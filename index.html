@@ -186,7 +186,9 @@
   #orChip{color:var(--c-richesse)}#barakaChip{color:var(--baraka)}
   .arena-head{display:flex;align-items:center;gap:8px;margin:4px 0 12px}
   .floor-badge{display:inline-flex;gap:6px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:7px 14px;font-weight:800;font-size:14px;box-shadow:var(--shadow-sm)}
-  .arena-head .cur{font-weight:800;font-size:13px;font-variant-numeric:tabular-nums}.arena-head .cur.or{color:var(--c-richesse)}.arena-head .cur.bk{color:var(--baraka);margin-left:auto}
+  .arena-head .cur{font-weight:800;font-size:13px;font-variant-numeric:tabular-nums}.arena-head .cur.or{color:var(--c-richesse);margin-left:auto}.arena-head .cur.bk{color:var(--baraka)}.arena-head .cur.wn{color:var(--muted);font-size:11.5px;letter-spacing:.04em}
+  .hitfx{position:absolute;top:64px;left:50%;width:74px;height:74px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,var(--fx),transparent 68%);pointer-events:none;z-index:19;animation:hitburst .4s ease-out forwards}
+  @keyframes hitburst{0%{opacity:.85;transform:translate(-50%,-50%) scale(.3)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5)}}
   .arena{position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:6px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 12%,var(--surface)),var(--surface));border:1px solid var(--border);border-radius:24px;padding:20px 14px 16px;min-height:220px;box-shadow:var(--shadow);overflow:hidden}
   .arena::after{content:"";position:absolute;left:0;right:0;bottom:0;height:34%;background:radial-gradient(70% 100% at 50% 100%,color-mix(in srgb,var(--accent) 26%,transparent),transparent);pointer-events:none}
   .fighter{display:flex;flex-direction:column;align-items:center;gap:9px;width:42%;position:relative;z-index:1}
@@ -524,8 +526,24 @@ const SKINS=[
   {id:'celestial',name:'Séraphin',rarity:'Légendaire',aura:{c:'#ffe9a8',style:'holy'},wings:true,pal:{p:'#eae4d0',s:'#c9c1a4',t:'#ffd05a',skin:'#e8b58a'},cond:()=>life().dhikr>=10000,hint:'10 000 dhikr cumulés'},
   {id:'cosmic',name:'Entité cosmique',rarity:'Légendaire',aura:{c:'#7c9bff',style:'stars'},pal:{p:'#1b1740',s:'#0f0d26',t:'#9bb0ff',skin:'#cfe0ff'},cond:()=>heroLevel()>=75,hint:'Atteins le niveau 75'},
 ];
-const MOBS=['🐀','🦇','🐍','🦂','🕷️','👺','🐺','👹','🧟','👻','🐗','💀','👿','🦈','🐲','🦖','☠️','🌑'];
-function mobAt(n){const boss=n%10===0;const emoji=boss?'👹':MOBS[(n-1)%MOBS.length];let hp=Math.round(26*Math.pow(1.16,n-1));let atk=Math.round(4*Math.pow(1.12,n-1));let gold=Math.round(6*Math.pow(1.14,n-1))+3;if(boss){hp=Math.round(hp*4);atk=Math.round(atk*1.5);gold*=5;}return{n,emoji,hp,atk,gold,boss,name:boss?('👑 Boss · étage '+n):('Étage '+n)};}
+const WORLDS=[
+  {name:'Plaines',tint:'#5fb33b',mobs:['🐀','🐍','🐗','🦂','🕷️','🐺'],boss:{emoji:'🦁',name:'Lion Alpha'}},
+  {name:'Forêt maudite',tint:'#2e7d4f',mobs:['🕷️','🦇','🐍','🐺','🐗','🧟'],boss:{emoji:'🧟',name:'Seigneur des Bois'}},
+  {name:'Cavernes',tint:'#a08a5a',mobs:['🦇','🕷️','🦂','👺','🐍'],boss:{emoji:'👹',name:'Roi Gobelin'}},
+  {name:'Marais toxique',tint:'#7fae2f',mobs:['🐸','🐍','🦟','🐊','🕷️'],boss:{emoji:'🐊',name:'Hydre des Marais'}},
+  {name:'Enfer',tint:'#e0492c',mobs:['🔥','👿','😈','🦇','💀'],boss:{emoji:'😈',name:'Démon Majeur'}},
+  {name:'Cité en ruine',tint:'#9aa0ad',mobs:['🧟','💀','🦇','👻','🕸️'],boss:{emoji:'💀',name:'Roi Squelette'}},
+  {name:'Toundra',tint:'#5ec8ff',mobs:['❄️','🐺','🐻','🦣','🦉'],boss:{emoji:'🐻',name:'Fenrir le Blanc'}},
+  {name:'Abysses',tint:'#2d6fe0',mobs:['🦈','🐙','🌊','🐡','👁️'],boss:{emoji:'🐙',name:'Kraken'}},
+  {name:'Néant',tint:'#7d63e0',mobs:['🌑','👁️','👻','🕳️','🦇'],boss:{emoji:'👁️',name:'Œil du Néant'}},
+  {name:'Cosmos',tint:'#7c9bff',mobs:['⭐','🌟','☄️','🌠','🪐'],boss:{emoji:'☄️',name:'Dévoreur d’Étoiles'}},
+];
+function worldOf(n){return WORLDS[Math.floor((n-1)/10)%WORLDS.length];}
+function mobAt(n){const w=worldOf(n);const boss=n%10===0;const emoji=boss?w.boss.emoji:w.mobs[(n-1)%w.mobs.length];let hp=Math.round(30*Math.pow(1.185,n-1));let atk=Math.round(4*Math.pow(1.135,n-1));let gold=Math.round(5*Math.pow(1.12,n-1))+3;if(boss){hp=Math.round(hp*5);atk=Math.round(atk*1.6);gold*=6;}return{n,emoji,hp,atk,gold,boss,world:w,name:boss?('👑 '+w.boss.name):('Créature · '+w.name)};}
+const WFX={as3:'shadow',as4:'venom',as5:'void',ch4:'holy',ch5:'fire',fa4:'soul',fa5:'soul',so3:'frost',so4:'arcane',so5:'cosmic'};
+const FXCOL={fire:'#ff6a2c',frost:'#5ec8ff',shadow:'#7d63e0',holy:'#ffe9a8',void:'#9b7bff',soul:'#57e08a',arcane:'#b98bff',venom:'#2fbf6b',cosmic:'#7c9bff'};
+const PRICE_MULT=1.8;
+function priceOf(it){return Math.round((it.cost||0)*PRICE_MULT);}
 const BOOST_COST=30;
 const QUEST_POOL=[
   {id:'q_prayers',emoji:'🕌',label:'Accomplir tes 5 prières',goal:5,metric:'prayers',baraka:18,xp:40,cat:'ame'},
@@ -652,6 +670,8 @@ function drawHero(){
   else if(cls==='sorcier'){head=`<ellipse cx="70" cy="66" rx="19" ry="5" fill="${pal.s}"/><polygon points="70,24 85,66 55,66" fill="${pal.p}"/><path d="M70,24 q10,20 15,42 q-15,-8 -15,-8z" fill="#ffffff" opacity=".12"/><text x="66" y="46" font-size="10" fill="${pal.t}">✦</text><circle cx="64" cy="61" r="1.6" fill="#2a2a2a"/><circle cx="76" cy="61" r="1.6" fill="#2a2a2a"/>`;}
   else{head=`<path d="M56,58 Q58,44 70,44 Q82,44 84,58 Q77,51 70,51 Q63,51 56,58 Z" fill="#6a4a30"/><circle cx="64" cy="61" r="1.6" fill="#2a2a2a"/><circle cx="76" cy="61" r="1.6" fill="#2a2a2a"/>`;}
   const sh=9+tier;
+  const fx=WFX[w.id]?FXCOL[WFX[w.id]]:null;
+  const wglow=fx?`<circle cx="0" cy="-6" r="16" fill="${fx}" opacity=".22"><animate attributeName="r" values="13;19;13" dur="1.6s" repeatCount="indefinite"/><animate attributeName="opacity" values=".12;.32;.12" dur="1.6s" repeatCount="indefinite"/></circle><circle cx="3" cy="-8" r="2" fill="${fx}"><animate attributeName="cy" values="-2;-30" dur="1.3s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="1.3s" repeatCount="indefinite"/></circle><circle cx="-3" cy="-4" r="1.6" fill="${fx}"><animate attributeName="cy" values="0;-26" dur="1.7s" repeatCount="indefinite"/><animate attributeName="opacity" values=".8;0" dur="1.7s" repeatCount="indefinite"/></circle>`:'';
   return `<svg viewBox="0 0 140 176" class="heroSvg" xmlns="http://www.w3.org/2000/svg">${auraSvg}${winSvg}${parts}
     <rect x="60" y="126" width="8" height="30" rx="4" fill="${pal.s}"/><rect x="72" y="126" width="8" height="30" rx="4" fill="${pal.s}"/>
     <rect x="44" y="86" width="10" height="34" rx="5" fill="${pal.s}"/>
@@ -660,7 +680,7 @@ function drawHero(){
     <polygon points="70,92 78,101 70,117 62,101" fill="${pal.t}" opacity=".85"/>
     <ellipse cx="52" cy="86" rx="${sh}" ry="${sh-1}" fill="${pal.s}"/><ellipse cx="88" cy="86" rx="${sh}" ry="${sh-1}" fill="${pal.s}"/>
     <rect x="86" y="86" width="10" height="30" rx="5" fill="${pal.s}"/>
-    <g transform="translate(99,98)">${weaponSVG(w.type,w.mat)}</g>
+    <g transform="translate(99,98)">${wglow}${weaponSVG(w.type,w.mat)}</g>
     <rect x="65" y="70" width="10" height="9" fill="${pal.skin}"/>
     <circle cx="70" cy="60" r="15" fill="${pal.skin}"/>
     ${head}
@@ -674,9 +694,9 @@ function renderArena(){ensureDay();ensureBattle();const hs=heroStats();const mob
   const canChoose=state.klass==='novice'&&hs.level>=CLASS_UNLOCK_LEVEL;
   const banner=canChoose?`<button class="class-banner" id="chooseClassBtn">⚔️ Niveau ${CLASS_UNLOCK_LEVEL} atteint — <b>choisis ta classe !</b> ›</button>`:'';
   $('#view-arene').innerHTML=`
-   <div class="arena-head"><span class="floor-badge">⚔️ Étage <b>${state.floor}</b></span><span class="cur or">🪙 ${nf.format(state.gold)}</span><span class="cur bk">✦ ${nf.format(state.baraka)}</span></div>
+   <div class="arena-head"><span class="floor-badge">⚔️ Étage <b>${state.floor}</b></span><span class="cur wn">${mob.world.name}</span><span class="cur or">🪙 ${nf.format(state.gold)}</span><span class="cur bk">✦ ${nf.format(state.baraka)}</span></div>
    ${banner}
-   <div class="arena">
+   <div class="arena" style="background:linear-gradient(180deg,${mob.world.tint}2e,${mob.world.tint}10,var(--surface))">
      <div class="fighter hero"><div class="hpwrap"><div class="hp hero"><i style="width:${hpPct}%"></i></div><div class="hptext">${Math.max(0,Math.ceil(CB.hp))} / ${hs.pvmax} PV</div></div><div class="fbody herofig" id="heroBody">${drawHero()}</div><div class="fname">${k.emoji} ${k.name} · Nv ${hs.level}</div></div>
      <div class="vs">⚔️</div>
      <div class="fighter mob"><div class="hpwrap"><div class="hp mob"><i style="width:${mPct}%"></i></div><div class="hptext">${Math.max(0,Math.ceil(CB.mobHP))} / ${mob.hp} PV</div></div><div class="fbody ${mob.boss?'boss':''}" id="mobBody">${mob.emoji}</div><div class="fname">${mob.name}</div></div>
@@ -689,15 +709,16 @@ function renderArena(){ensureDay();ensureBattle();const hs=heroStats();const mob
 }
 function updateBattleUI(){const hs=heroStats(),mob=mobAt(state.floor);const hi=document.querySelector('.hp.hero>i'),mi=document.querySelector('.hp.mob>i');if(hi)hi.style.width=Math.max(0,CB.hp/hs.pvmax*100)+'%';if(mi)mi.style.width=Math.max(0,CB.mobHP/mob.hp*100)+'%';const ht=document.querySelectorAll('.hptext');if(ht[0])ht[0].textContent=Math.max(0,Math.ceil(CB.hp))+' / '+hs.pvmax+' PV';if(ht[1])ht[1].textContent=Math.max(0,Math.ceil(CB.mobHP))+' / '+mob.hp+' PV';}
 function animateAttack(who){const el=$(who==='hero'?'#heroBody':'#mobBody');if(el){const cls=who==='hero'?'lunge-r':'lunge-l';el.classList.add(cls);setTimeout(()=>el.classList.remove(cls),160);}const foe=$(who==='hero'?'#mobBody':'#heroBody');if(foe){foe.classList.add('hit');setTimeout(()=>foe.classList.remove('hit'),300);}}
+function hitFx(){const w=equippedWeapon();const col=WFX[w.id]?FXCOL[WFX[w.id]]:'#ffffff';const f=$('.fighter.mob');if(!f)return;const d=document.createElement('div');d.className='hitfx';d.style.setProperty('--fx',col);f.appendChild(d);setTimeout(()=>d.remove(),400);}
 function floatDmg(who,text,crit,positive){const f=$(who==='hero'?'.fighter.hero':'.fighter.mob');if(!f)return;const d=document.createElement('div');d.className='dmg'+(crit?' crit':'');d.textContent=(typeof text==='number'?('-'+text):text);d.style.color=positive?'#39D39B':(who==='hero'?'#FF6B7A':(crit?'#FFD36B':'#fff'));f.appendChild(d);setTimeout(()=>d.remove(),820);}
-function attack(){ensureBattle();if(CB.busy)return;const hs=heroStats(),mob=mobAt(state.floor);const crit=Math.random()*100<hs.crit;const dmg=Math.max(1,Math.round(hs.atk*(crit?2:1)*(0.85+Math.random()*0.3)));CB.mobHP-=dmg;animateAttack('hero');floatDmg('mob',dmg,crit,false);beep(crit?720:520,.06,'square',.07);vibrate(crit?24:9);if(CB.mobHP<=0){CB.mobHP=0;updateBattleUI();victory(mob);return;}const mdmg=Math.max(1,Math.round((mob.atk-hs.def)*(0.85+Math.random()*0.3)));CB.hp-=mdmg;setTimeout(()=>{animateAttack('mob');floatDmg('hero',mdmg,false,false);},150);if(CB.hp<=0){CB.hp=0;updateBattleUI();setTimeout(defeat,320);return;}updateBattleUI();}
+function attack(){ensureBattle();if(CB.busy)return;const hs=heroStats(),mob=mobAt(state.floor);const crit=Math.random()*100<hs.crit;const dmg=Math.max(1,Math.round(hs.atk*(crit?2:1)*(0.85+Math.random()*0.3)));CB.mobHP-=dmg;animateAttack('hero');hitFx();floatDmg('mob',dmg,crit,false);beep(crit?720:520,.06,'square',.07);vibrate(crit?24:9);if(CB.mobHP<=0){CB.mobHP=0;updateBattleUI();victory(mob);return;}const mdmg=Math.max(1,Math.round((mob.atk-hs.def)*(0.85+Math.random()*0.3)));CB.hp-=mdmg;setTimeout(()=>{animateAttack('mob');floatDmg('hero',mdmg,false,false);},150);if(CB.hp<=0){CB.hp=0;updateBattleUI();setTimeout(defeat,320);return;}updateBattleUI();}
 function victory(mob){CB.busy=true;state.gold+=mob.gold;ensureDay();state.daily.kills=(state.daily.kills||0)+1;life().kills++;const mb=$('#mobBody');if(mb)mb.classList.add('dead');floatDmg('mob','+'+mob.gold+' 🪙',true,true);beep(880,.18,'triangle',.14);burst(mob.boss?90:28);updateBaraka();save();setTimeout(()=>{state.floor++;if(state.floor>state.floorMax)state.floorMax=state.floor;CB=null;save();renderArena();toast(mob.boss?('👑 Boss vaincu ! +'+mob.gold+' or'):('Vaincu ! +'+mob.gold+' or'));},520);}
 function defeat(){CB.busy=true;stopAuto();const hb=$('#heroBody');if(hb)hb.classList.add('flash');beep(200,.3,'sawtooth',.1);const hs=heroStats(),mob=mobAt(state.floor);setTimeout(()=>{CB={floor:state.floor,hp:hs.pvmax,mobHP:mob.hp,busy:false};renderArena();toast('💀 Vaincu ! Renforce-toi : prières, quiz, ou meilleur équipement.');},650);}
 function toggleAuto(){if(autoTimer){stopAuto();}else{autoTimer=setInterval(()=>{if($('#view-arene').classList.contains('hidden')){return;}if(CB&&CB.busy)return;attack();},620);}renderArena();}
 function stopAuto(){if(autoTimer){clearInterval(autoTimer);autoTimer=null;}}
 function findGear(id){return WEAPONS.find(w=>w.id===id)||ARMORS.find(a=>a.id===id);}
 function gearSlot(it){return WEAPONS.includes(it)?'weapon':'armor';}
-function buyGear(id){const it=findGear(id);if(!it||state.owned.includes(id)||state.gold<it.cost||heroLevel()<(it.req||0))return;state.gold-=it.cost;state.owned.push(id);state.gear[gearSlot(it)]=id;CB=null;save();updateBaraka();renderShop();renderArena();burst(40);beep(900,.18,'triangle',.15);vibrate(30);toast('✅ '+it.name+' acheté et équipé !');}
+function buyGear(id){const it=findGear(id);if(!it||state.owned.includes(id)||state.gold<priceOf(it)||heroLevel()<(it.req||0))return;state.gold-=priceOf(it);state.owned.push(id);state.gear[gearSlot(it)]=id;CB=null;save();updateBaraka();renderShop();renderArena();burst(40);beep(900,.18,'triangle',.15);vibrate(30);toast('✅ '+it.name+' acheté et équipé !');}
 function equipGear(id){const it=findGear(id);if(!it||!state.owned.includes(id))return;state.gear[gearSlot(it)]=id;CB=null;save();renderShop();renderArena();beep(760,.12);toast('Équipé : '+it.name);}
 function chooseClass(id){if(!CLASSES[id]||state.klass!=='novice')return;state.klass=id;const first=WEAPONS.find(w=>w.cls===id);if(first){if(!state.owned.includes(first.id))state.owned.push(first.id);state.gear.weapon=first.id;}CB=null;save();hideModal();renderArena();renderShop();burst(70);beep(1000,.25,'triangle',.16);toast(CLASSES[id].emoji+' Tu es désormais '+CLASSES[id].name+' !');}
 function equipSkin(id){const s=SKINS.find(x=>x.id===id);if(!s||!skinUnlocked(s))return;state.skin=id;CB=null;save();renderShop();renderArena();burst(40);beep(880,.16,'triangle',.15);toast('✨ Skin équipé : '+s.name);}
@@ -710,7 +731,7 @@ function renderDay(){ensureDay();$('#questBox').innerHTML=renderQuests();let h='
 
 /* ---------- render: evo ---------- */
 function renderPrayerSetup(){const box=$('#prayerSetup');const set=state.prayerTimes&&state.prayerTimes.day===todayKey();if(set){const T=state.prayerTimes.times;box.innerHTML=`<div class="pdesc">Après l’heure de chaque prière, tu as <b>1h pour la valider</b>, sinon c’est « trop tard ». Actualisé chaque jour selon ta position.</div><div class="ptimes">${PRAYER_IDS.map(p=>`<span class="ptime"><b>${p[0].toUpperCase()+p.slice(1)}</b> ${T[p]}</span>`).join('')}</div><div class="prow"><button class="btn ghost" id="prayerAuto">📍 Actualiser</button><button class="btn ghost" id="prayerClear">Désactiver</button></div>`;}else{box.innerHTML=`<div class="pdesc">Active un <b>chrono de prière</b> : à partir de l’heure de chaque prière tu as 1h pour la valider. Sans ça, tu peux valider à tout moment.</div><div class="prow"><button class="btn" id="prayerAuto">📍 Utiliser ma position</button><button class="btn ghost" id="prayerManual">✎ Saisir à la main</button></div><div class="pt-form" id="ptForm">${PRAYER_IDS.map(p=>`<label>${p[0].toUpperCase()+p.slice(1)}<input type="time" id="pf-${p}"></label>`).join('')}<button class="btn" id="ptSave">Enregistrer mes horaires</button></div>`;}}
-function gearRow(it,stats,hl){const owned=state.owned.includes(it.id);const eq=state.gear.weapon===it.id||state.gear.armor===it.id;const ic=it.type?`<svg viewBox="-22 -34 44 74" style="width:100%;height:100%"><g transform="translate(0,8)">${weaponSVG(it.type,it.mat)}</g></svg>`:'🛡️';let btn;if(eq)btn='<button class="gbtn on" disabled>Équipé ✓</button>';else if(owned)btn=`<button class="gbtn" data-equip="${it.id}">Équiper</button>`;else if(hl<(it.req||0))btn=`<button class="gbtn lock" disabled>🔒 Nv ${it.req}</button>`;else if(state.gold>=it.cost)btn=`<button class="gbtn buy" data-buygear="${it.id}">🪙 ${nf.format(it.cost)}</button>`;else btn=`<button class="gbtn lock" disabled>🪙 ${nf.format(it.cost)}</button>`;return`<div class="gear ${eq?'eq':''}"><div class="gic"${it.type?'':' style="background:var(--surface-2)"'}>${ic}</div><div class="gmain"><div class="gn">${it.name}</div><div class="gs">${stats}</div></div>${btn}</div>`;}
+function gearRow(it,stats,hl){const owned=state.owned.includes(it.id);const eq=state.gear.weapon===it.id||state.gear.armor===it.id;const ic=it.type?`<svg viewBox="-22 -34 44 74" style="width:100%;height:100%"><g transform="translate(0,8)">${weaponSVG(it.type,it.mat)}</g></svg>`:'🛡️';let btn;if(eq)btn='<button class="gbtn on" disabled>Équipé ✓</button>';else if(owned)btn=`<button class="gbtn" data-equip="${it.id}">Équiper</button>`;else if(hl<(it.req||0))btn=`<button class="gbtn lock" disabled>🔒 Nv ${it.req}</button>`;else if(state.gold>=priceOf(it))btn=`<button class="gbtn buy" data-buygear="${it.id}">🪙 ${nf.format(priceOf(it))}</button>`;else btn=`<button class="gbtn lock" disabled>🪙 ${nf.format(priceOf(it))}</button>`;return`<div class="gear ${eq?'eq':''}"><div class="gic"${it.type?'':' style="background:var(--surface-2)"'}>${ic}</div><div class="gmain"><div class="gn">${it.name}</div><div class="gs">${stats}</div></div>${btn}</div>`;}
 function renderShop(){const hl=heroLevel();const k=klass();const kp=CLASS_PAL[state.klass];let h='';
   h+=`<div class="sec-label">Classe</div><div class="gear"><div class="gic" style="background:linear-gradient(160deg,${kp.p},${kp.s});color:#fff">${k.emoji}</div><div class="gmain"><div class="gn">${k.name}</div><div class="gs">${k.desc}</div></div>${state.klass==='novice'?(hl>=CLASS_UNLOCK_LEVEL?'<button class="gbtn buy" id="chooseClassBtn2">Choisir</button>':`<button class="gbtn lock" disabled>🔒 Nv ${CLASS_UNLOCK_LEVEL}</button>`):''}</div>`;
   h+=`<div class="sec-label">🗡️ Armes${state.klass!=='novice'?' · voie du '+k.name:''}</div><div class="gear-list">`;
