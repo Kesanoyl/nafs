@@ -163,6 +163,25 @@
   .float-pts{position:fixed;z-index:85;pointer-events:none;font-weight:900;font-size:20px;text-shadow:0 2px 8px rgba(0,0,0,.2);animation:floatUp 1s ease forwards}
   @keyframes floatUp{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}20%{opacity:1;transform:translate(-50%,-60%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-140%) scale(1)}}
   .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);z-index:95;background:var(--text);color:var(--bg);padding:12px 20px;border-radius:14px;font-weight:800;font-size:14px;box-shadow:var(--shadow);opacity:0;transition:opacity .3s,transform .3s;max-width:88%;text-align:center}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .title-line{font-size:12.5px;color:var(--muted);font-weight:600;margin-top:9px;line-height:1.5}.title-line b{color:var(--accent)}
+  .sec-strip-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:800;margin:2px 4px 9px}
+  .rewards{display:flex;gap:10px;overflow-x:auto;padding:2px 4px 12px;scrollbar-width:none}.rewards::-webkit-scrollbar{display:none}
+  .reward{flex:none;width:144px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:13px;box-shadow:var(--shadow-sm)}
+  .reward .rp{width:42px;height:42px;border-radius:50%;margin-bottom:9px;position:relative;box-shadow:var(--shadow-sm)}
+  .reward .rlock{position:absolute;top:12px;left:13px;font-size:15px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
+  .reward .rk{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--faint)}
+  .reward .rn{font-size:14px;font-weight:800;margin-top:2px;line-height:1.15}
+  .reward .rd{font-size:11px;color:var(--muted);font-weight:700;margin-top:6px;font-variant-numeric:tabular-nums}
+  .reward .rbar{height:5px;border-radius:999px;background:var(--surface-3);margin-top:8px;overflow:hidden}.reward .rbar>i{display:block;height:100%;background:var(--cc);border-radius:999px}
+  .quiz{display:flex;flex-direction:column;gap:12px;padding-top:6px}
+  .qprog{text-align:center;font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.05em}
+  .qq{font-size:18px;font-weight:800;line-height:1.35;text-align:center;padding:4px 2px}
+  .qopts{display:flex;flex-direction:column;gap:10px}
+  .qopt{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:15px 16px;font-size:15px;font-weight:700;cursor:pointer;text-align:left;color:var(--text);transition:transform .1s;box-shadow:var(--shadow-sm)}
+  .qopt:active{transform:scale(.98)}.qopt[disabled]{cursor:default}
+  .qopt.correct{border-color:var(--good);background:color-mix(in srgb,var(--good) 15%,var(--surface))}
+  .qopt.wrong{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 15%,var(--surface))}
+  .qfeed{text-align:center;font-weight:800;font-size:14px;padding:2px}
   @media (prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.05s!important}}
 </style>
 </head>
@@ -179,6 +198,7 @@
   <section class="view" id="view-home">
     <div class="orb-wrap"><canvas id="orb" aria-hidden="true"></canvas><div class="orb-stage" id="orbStage"></div></div>
     <div class="card" id="globalCard"></div>
+    <div id="rewardsWrap"></div>
     <div class="stats" id="statList"></div>
   </section>
   <section class="view hidden" id="view-day">
@@ -300,10 +320,87 @@ const CORAN=[
     ['فَسَبِّحْ بِحَمْدِ رَبِّكَ وَاسْتَغْفِرْهُ إِنَّهُ كَانَ تَوَّابًا','Fa sabbih bi hamdi rabbika wa staghfirh, innahu kâna tawwâbâ','alors glorifie ton Seigneur par Sa louange et implore Son pardon. Car c’est Lui le grand Accueillant au repentir.']]},
 ];
 const PPP={esprit:8, coranVerse:6};
+const LESSON_PTS={savoir:15, anglais:12};
+const LESSONS={
+  savoir:[
+    {emoji:'💶',title:'L’argent, les bases',teach:[
+      "La règle 50/30/20 : sur ce que tu gagnes, vise 50% pour les besoins (loyer, nourriture), 30% pour les envies, et 20% pour l’épargne et rembourser tes dettes. Un repère simple pour ne pas finir le mois à sec.",
+      "Les intérêts composés : ton argent placé génère des intérêts, qui génèrent à leur tour des intérêts. 100€ à 8% par an deviennent ~1000€ en 30 ans sans rien ajouter. Le temps est ton meilleur allié : commence tôt, même petit.",
+      "Paie-toi en premier : dès que tu reçois de l’argent, mets ton épargne de côté AVANT de dépenser. Ce qui reste, tu peux le dépenser sans culpabilité."],
+      quiz:[
+        {q:'La règle 50/30/20 conseille de mettre quelle part de côté ?',opts:['20%','50%','30%'],a:0},
+        {q:'Les intérêts composés, c’est…',opts:['des intérêts qui produisent eux-mêmes des intérêts','un impôt sur l’épargne','un type de crédit'],a:0},
+        {q:'« Se payer en premier » signifie…',opts:['épargner avant de dépenser','dépenser puis épargner le reste','emprunter pour investir'],a:0}]},
+    {emoji:'😴',title:'Bien dormir',teach:[
+      "Le sommeil se joue en cycles d’environ 90 minutes. Se réveiller en fin de cycle (après 6h, 7h30…) est plus reposant qu’au milieu d’un cycle. Vise des nuits multiples de 1h30.",
+      "La lumière bleue des écrans bloque la mélatonine, l’hormone du sommeil. Couper les écrans 30 à 60 min avant de dormir aide énormément à s’endormir vite.",
+      "La régularité prime sur la durée : se coucher et se lever à heures fixes, même le week-end, stabilise ton horloge interne et booste ton énergie."],
+      quiz:[
+        {q:'Un cycle de sommeil dure environ…',opts:['90 minutes','30 minutes','4 heures'],a:0},
+        {q:'La lumière bleue des écrans…',opts:['freine l’endormissement','aide à dormir','n’a aucun effet'],a:0},
+        {q:'Le plus important pour bien dormir, c’est…',opts:['la régularité des horaires','dormir le plus tard possible','une seule grosse nuit par semaine'],a:0}]},
+    {emoji:'🧠',title:'Mieux apprendre',teach:[
+      "La répétition espacée : réviser une info à intervalles croissants (1 jour, 3 jours, 1 semaine) l’ancre bien mieux qu’un bachotage d’un coup. Un peu, souvent, l’emporte.",
+      "Le rappel actif : se tester (essayer de se souvenir sans regarder) est bien plus efficace que relire. L’effort de récupération renforce la mémoire — c’est pour ça que les quiz marchent.",
+      "La loi de Pareto (80/20) : souvent 20% des efforts produisent 80% des résultats. Repère les 20% qui comptent vraiment et concentre-toi dessus."],
+      quiz:[
+        {q:'La répétition espacée consiste à…',opts:['réviser à intervalles croissants','tout apprendre en une nuit','relire sans jamais se tester'],a:0},
+        {q:'Le rappel actif, c’est…',opts:['se tester de mémoire','relire ses notes en boucle','surligner le cours'],a:0},
+        {q:'La loi de Pareto dit que…',opts:['20% des efforts donnent 80% des résultats','il faut tout faire à 100%','80% des gens réussissent'],a:0}]},
+    {emoji:'💬',title:'Mieux communiquer',teach:[
+      "Écouter vraiment : la plupart des gens attendent leur tour pour parler au lieu d’écouter. Reformuler ce que dit l’autre (« si je comprends bien… ») montre que tu écoutes et évite les malentendus.",
+      "Le langage du corps compte plus que les mots : posture ouverte, contact visuel, ton calme. On te croit d’abord sur la forme, ensuite sur le fond.",
+      "Dire non avec respect : un « non » clair et poli vaut mieux qu’un « oui » que tu regretteras. « Je comprends, mais je ne peux pas » suffit — pas besoin de te justifier longuement."],
+      quiz:[
+        {q:'Bien écouter, c’est souvent…',opts:['reformuler ce que dit l’autre','préparer sa réponse pendant qu’il parle','parler plus fort'],a:0},
+        {q:'Dans la communication, la forme (ton, posture)…',opts:['compte énormément','ne compte pas','nuit au message'],a:0},
+        {q:'Pour refuser sainement…',opts:['un non clair et respectueux suffit','il faut se justifier longuement','mieux vaut dire oui à contrecœur'],a:0}]},
+  ],
+  anglais:[
+    {emoji:'👋',title:'Les salutations',teach:[
+      "Hello = Bonjour / Salut · Hi = Salut (familier) · Good morning = Bonjour (le matin) · Good evening = Bonsoir.",
+      "How are you? = Comment vas-tu ? · I’m fine, thanks = Ça va, merci · And you? = Et toi ?",
+      "Goodbye = Au revoir · See you! = À plus ! · Please = S’il te plaît · Thank you = Merci · Sorry = Désolé."],
+      quiz:[
+        {q:'« Good morning » veut dire…',opts:['Bonjour (le matin)','Bonne nuit','Au revoir'],a:0},
+        {q:'Comment dit-on « Merci » ?',opts:['Thank you','Please','Sorry'],a:0},
+        {q:'« How are you? » signifie…',opts:['Comment vas-tu ?','Quel âge as-tu ?','Où vas-tu ?'],a:0},
+        {q:'« See you! » veut dire…',opts:['À plus !','Assieds-toi','Regarde'],a:0}]},
+    {emoji:'🏃',title:'Les verbes courants',teach:[
+      "to be = être · to have = avoir · to do = faire · to go = aller.",
+      "to want = vouloir · to need = avoir besoin · to like = aimer bien · to know = savoir / connaître.",
+      "to eat = manger · to drink = boire · to speak = parler · to work = travailler."],
+      quiz:[
+        {q:'« to have » signifie…',opts:['avoir','être','aller'],a:0},
+        {q:'Comment dit-on « manger » ?',opts:['to eat','to drink','to speak'],a:0},
+        {q:'« to want » veut dire…',opts:['vouloir','savoir','travailler'],a:0},
+        {q:'« to know » signifie…',opts:['savoir / connaître','aimer','faire'],a:0}]},
+    {emoji:'✈️',title:'Voyager',teach:[
+      "Where is…? = Où est… ? · the airport = l’aéroport · the hotel = l’hôtel · the station = la gare.",
+      "How much is it? = Combien ça coûte ? · the bill, please = l’addition, s’il vous plaît · a ticket = un billet.",
+      "left = gauche · right = droite · straight ahead = tout droit · help = à l’aide."],
+      quiz:[
+        {q:'« How much is it? » signifie…',opts:['Combien ça coûte ?','Où est-ce ?','Quelle heure est-il ?'],a:0},
+        {q:'« the station » veut dire…',opts:['la gare','l’hôtel','l’aéroport'],a:0},
+        {q:'Comment dit-on « à droite » ?',opts:['right','left','straight ahead'],a:0},
+        {q:'« a ticket » signifie…',opts:['un billet','une addition','une valise'],a:0}]},
+    {emoji:'💬',title:'Phrases utiles',teach:[
+      "I don’t understand = Je ne comprends pas · Can you help me? = Peux-tu m’aider ? · Slowly, please = Lentement, s’il vous plaît.",
+      "I would like… = Je voudrais… · I’m looking for… = Je cherche… · What time is it? = Quelle heure est-il ?",
+      "It’s easy = C’est facile · I’m learning English = J’apprends l’anglais · Well done! = Bien joué !"],
+      quiz:[
+        {q:'« I don’t understand » signifie…',opts:['Je ne comprends pas','Je suis d’accord','Je ne sais pas'],a:0},
+        {q:'« Can you help me? » veut dire…',opts:['Peux-tu m’aider ?','Peux-tu répéter ?','Où vas-tu ?'],a:0},
+        {q:'Comment dit-on « Je voudrais… » ?',opts:['I would like…','I’m looking for…','I need…'],a:0},
+        {q:'« Well done! » signifie…',opts:['Bien joué !','À bientôt','Bonne nuit'],a:0}]},
+  ],
+};
 
+const LANG_STAGES=['Débutant','Notions','Conversationnel','À l’aise','Courant','Bilingue','Polyglotte'];
 const DEFAULT_CATS=[
   {id:'ame',name:'Âme / Foi',emoji:'🕌',color:'#7C6BF0',type:'xp',stages:['Étincelle','Lueur','Flamme','Halo','Aura','Lumière','Nūr']},
   {id:'esprit',name:'Esprit / Savoir',emoji:'🧠',color:'#17B0A0',type:'xp',stages:['Curieux','Éveillé','Instruit','Érudit','Sage','Visionnaire','Oracle']},
+  {id:'langues',name:'Langues',emoji:'🗣️',color:'#2D8CFF',type:'xp',stages:LANG_STAGES},
   {id:'richesse',name:'Richesse',emoji:'💰',color:'#C98A1E',type:'money',ranks:[[0,'Graine 🌱'],[500,'Débrouillard'],[2000,'Économe'],[10000,'À l’aise'],[50000,'Aisé'],[150000,'Fortuné'],[500000,'Riche'],[1000000,'Millionnaire'],[5000000,'Magnat']]},
 ];
 const GENERIC_STAGES=['Novice','Apprenti','Adepte','Expert','Maître','Grand Maître','Légende'];
@@ -316,9 +413,10 @@ const DEFAULT_TASKS=[
   {id:'isha',cat:'ame',name:'Prière — Isha',pts:30,type:'check'},
   {id:'dhikr',cat:'ame',name:'Dhikr (chapelet)',pts:20,type:'counter'},
   {id:'coran',cat:'ame',name:'Lecture du Coran',pts:0,type:'reader',lib:'coran'},
+  {id:'lecon',cat:'esprit',name:'Leçon & Quiz du savoir',pts:0,type:'learn',set:'savoir'},
   {id:'lecture',cat:'esprit',name:'Lecture (sagesse)',pts:0,type:'reader',lib:'esprit'},
-  {id:'appr',cat:'esprit',name:'Apprendre qqch de neuf',pts:40,type:'check'},
   {id:'projet',cat:'esprit',name:'Avancer sur un projet',pts:50,type:'check'},
+  {id:'anglais',cat:'langues',name:'Anglais — Leçon & Quiz',pts:0,type:'learn',set:'anglais'},
 ];
 const SKINS=[
   {id:'origine',name:'Origine',req:1,price:0,orb:['#8B7BFF','#5B44D4'],accent:'#7C6BF0'},
@@ -334,18 +432,29 @@ const QUEST_POOL=[
   {id:'q_prayers',emoji:'🕌',label:'Accomplir tes 5 prières',goal:5,metric:'prayers',baraka:18,xp:40,cat:'ame'},
   {id:'q_dhikr',emoji:'📿',label:'Faire 100 dhikr',goal:100,metric:'dhikr',baraka:20,xp:30,cat:'ame'},
   {id:'q_verses',emoji:'📖',label:'Lire 10 versets',goal:10,metric:'verses',baraka:16,xp:25,cat:'ame'},
-  {id:'q_pages',emoji:'🧠',label:'Lire 4 pages de sagesse',goal:4,metric:'pages',baraka:16,xp:25,cat:'esprit'},
+  {id:'q_pages',emoji:'📖',label:'Lire 4 pages de sagesse',goal:4,metric:'pages',baraka:16,xp:25,cat:'esprit'},
+  {id:'q_quiz',emoji:'🎓',label:'Réussir 6 questions de quiz',goal:6,metric:'quiz',baraka:18,xp:20,cat:'esprit'},
+  {id:'q_lang',emoji:'🗣️',label:'Réussir 4 questions d’anglais',goal:4,metric:'quiz',baraka:14,xp:20,cat:'langues'},
   {id:'q_euros',emoji:'💶',label:'Gagner ou économiser 50€',goal:50,metric:'euros',baraka:14,xp:0},
   {id:'q_tasks',emoji:'✅',label:'Cocher 5 tâches',goal:5,metric:'tasks',baraka:22,xp:20,cat:'esprit'},
   {id:'q_dhikr33',emoji:'🤲',label:'Faire un cycle de 33 dhikr',goal:33,metric:'dhikr',baraka:8,xp:0},
 ];
 
 /* ---------- state ---------- */
-const freshDaily=()=>({dhikr:0,verses:0,pages:0,surahs:0,euros:0,readToday:{},claimed:{}});
+const freshDaily=()=>({dhikr:0,verses:0,pages:0,surahs:0,quiz:0,euros:0,readToday:{},claimed:{}});
 const defaultState=()=>({cats:JSON.parse(JSON.stringify(DEFAULT_CATS)),tasks:JSON.parse(JSON.stringify(DEFAULT_TASKS)),
   xp:{ame:0,esprit:0},euros:0,day:todayKey(),done:{},daily:freshDaily(),streak:0,streakDay:null,
   skin:'origine',purchased:[],baraka:0,boostDay:null,geo:null,prayerTimes:null,theme:null,muted:false,seq:1});
 let state=load();
+migrateContent();
+function migrateContent(){
+  if(!state.cats.find(c=>c.id==='langues')){const i=state.cats.findIndex(c=>c.type==='money');const cat={id:'langues',name:'Langues',emoji:'🗣️',color:'#2D8CFF',type:'xp',stages:LANG_STAGES};if(i>=0)state.cats.splice(i,0,cat);else state.cats.push(cat);}
+  if(state.xp['langues']==null)state.xp['langues']=0;
+  state.tasks=state.tasks.filter(t=>t.id!=='appr');
+  if(!state.tasks.find(t=>t.id==='lecon'))state.tasks.push({id:'lecon',cat:'esprit',name:'Leçon & Quiz du savoir',pts:0,type:'learn',set:'savoir'});
+  if(!state.tasks.find(t=>t.id==='anglais'))state.tasks.push({id:'anglais',cat:'langues',name:'Anglais — Leçon & Quiz',pts:0,type:'learn',set:'anglais'});
+  save();
+}
 function load(){try{const s=JSON.parse(localStorage.getItem(LS));if(s){const d=defaultState();return Object.assign(d,s,{cats:s.cats||d.cats,tasks:s.tasks||d.tasks,xp:Object.assign({},d.xp,s.xp||{}),done:s.done||{},daily:Object.assign(freshDaily(),s.daily||{}),purchased:s.purchased||[]});}const old=JSON.parse(localStorage.getItem('nafs_v2'));const d=defaultState();if(old){d.xp=Object.assign(d.xp,old.xp||{});d.euros=old.euros||0;d.streak=old.streak||0;d.streakDay=old.streakDay||null;d.skin=old.skin||'origine';d.theme=old.theme||null;d.muted=!!old.muted;if(old.cats)d.cats=old.cats;}return d;}catch(e){return defaultState();}}
 function save(){try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){}}
 function todayKey(dt=new Date()){return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');}
@@ -357,6 +466,7 @@ function catXp(id){return state.xp[id]||0;}
 function catLevel(id){return levelFromXp(catXp(id)).level;}
 function globalPoints(){let p=0;for(const c of state.cats)p+=(c.type==='xp')?(state.xp[c.id]||0):Math.floor((state.euros||0)/6);return p;}
 function globalLevel(){const p=globalPoints();let lvl=1,need=260,acc=0;while(p>=acc+need){acc+=need;lvl++;need=Math.round(need*1.16);}return{level:lvl,into:p-acc,need,pct:Math.max(0,Math.min(1,(p-acc)/need))};}
+function globalPtsForLevel(L){let need=260,acc=0;for(let k=1;k<L;k++){acc+=need;need=Math.round(need*1.16);}return acc;}
 function stageFor(cat,level){const arr=cat.stages||GENERIC_STAGES;const i=Math.min(Math.floor((level-1)/3),arr.length-1);return{name:arr[i],idx:i,arr};}
 function rankFor(euros,ranks){let cur=0;for(let i=0;i<ranks.length;i++)if(euros>=ranks[i][0])cur=i;const next=cur<ranks.length-1?cur+1:null;return{cur,next,name:ranks[cur][1],nextName:next!=null?ranks[next][1]:null,nextAt:next!=null?ranks[next][0]:null,prevAt:ranks[cur][0]};}
 function skin(){return SKINS.find(s=>s.id===state.skin)||SKINS[0];}
@@ -378,8 +488,8 @@ function floatPts(x,y,txt,color){const el=document.createElement('div');el.class
 let toastT;function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2400);}
 const cf=$('#confetti'),cfx=cf.getContext('2d');let cfp=[],cfRun=false;
 function sizeCf(){cf.width=innerWidth*devicePixelRatio;cf.height=innerHeight*devicePixelRatio;cfx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);}
-function burst(n){if(reduce)return;sizeCf();const cols=[skin().orb[0],skin().orb[1],'#FFD36B','#fff'];for(let i=0;i<(n||90);i++)cfp.push({x:innerWidth/2,y:innerHeight*.36,vx:(Math.random()-.5)*9,vy:Math.random()*-9-3,g:.28,s:Math.random()*6+3,c:cols[i%cols.length],r:Math.random()*6,vr:(Math.random()-.5)*.4,a:1});if(!cfRun){cfRun=true;requestAnimationFrame(cfStep);}}
-function cfStep(){cfx.clearRect(0,0,innerWidth,innerHeight);cfp=cfp.filter(p=>p.a>0);for(const p of cfp){p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;p.a-=.012;cfx.save();cfx.globalAlpha=Math.max(0,p.a);cfx.translate(p.x,p.y);cfx.rotate(p.r);cfx.fillStyle=p.c;cfx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);cfx.restore();}if(cfp.length)requestAnimationFrame(cfStep);else{cfRun=false;cfx.clearRect(0,0,innerWidth,innerHeight);}}
+function burst(n){if(reduce)return;sizeCf();const cols=[skin().orb[0],skin().orb[1],'#FFD36B','#fff'];for(let i=0;i<(n||90);i++)cfp.push({x:innerWidth/2,y:innerHeight*.34,vx:(Math.random()-.5)*10,vy:Math.random()*-10-4,g:.34,s:Math.random()*6+3,c:cols[i%cols.length],r:Math.random()*6,vr:(Math.random()-.5)*.4,a:1,life:0});if(!cfRun){cfRun=true;requestAnimationFrame(cfStep);}}
+function cfStep(){cfx.clearRect(0,0,innerWidth,innerHeight);cfp=cfp.filter(p=>p.a>0&&p.y<innerHeight+60&&p.life<170);for(const p of cfp){p.life++;p.vy+=p.g;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;if(p.life>34)p.a-=.028;cfx.save();cfx.globalAlpha=Math.max(0,p.a);cfx.translate(p.x,p.y);cfx.rotate(p.r);cfx.fillStyle=p.c;cfx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);cfx.restore();}if(cfp.length)requestAnimationFrame(cfStep);else{cfRun=false;cfx.clearRect(0,0,innerWidth,innerHeight);}}
 
 /* ---------- orb ---------- */
 const orb=$('#orb'),octx=orb.getContext('2d');let orbT=0,pulse=0;
@@ -390,7 +500,7 @@ function drawOrb(){const W=orb.clientWidth,H=orb.clientHeight;if(!W){requestAnim
 
 /* ---------- awarding + session ---------- */
 let SESS=null;
-function startSess(cat,kind){SESS={cat,kind,xp:0,dhikr:0,cycles:0,verses:0,pages:0,surahs:0};}
+function startSess(cat,kind){SESS={cat,kind,xp:0,dhikr:0,cycles:0,verses:0,pages:0,surahs:0,correct:0,total:0};}
 function applySkin(){const sk=skin();const rs=document.documentElement.style;rs.setProperty('--accent',sk.accent);rs.setProperty('--orb1',sk.orb[0]);rs.setProperty('--orb2',sk.orb[1]);rs.setProperty('--accent-soft',hexA(sk.accent,.12));}
 function updateBaraka(){$('#barakaChip').textContent='✦ '+nf.format(state.baraka);}
 function award(catId,pts,el){if(pts<=0)return 0;const mult=boostActive()?2:1;const g=Math.round(pts*mult);const before=catLevel(catId),gb=globalLevel().level;state.xp[catId]=(state.xp[catId]||0)+g;if(SESS)SESS.xp+=g;save();const cat=state.cats.find(c=>c.id===catId);if(el){const r=el.getBoundingClientRect();floatPts(r.left+r.width/2,r.top+r.height/2,'+'+g,cat?cat.color:'var(--accent)');}beep(700,.1);pulse=Math.max(pulse,.08);if(catLevel(catId)>before){pulse=.14;beep(880,.16,'triangle',.14);}if(globalLevel().level>gb)celebrateGlobal(gb,globalLevel().level);return g;}
@@ -401,15 +511,22 @@ function addEuros(amt){if(!amt||amt<=0)return;ensureDay();const cat=state.cats.f
 /* ---------- quests ---------- */
 function hashStr(s){let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h;}
 function todayQuests(){let s=hashStr(state.day)||1;const pool=QUEST_POOL.slice(),out=[];for(let k=0;k<3&&pool.length;k++){s=(s*9301+49297)%233280;out.push(pool.splice(s%pool.length,1)[0]);}return out;}
-function metricVal(m){switch(m){case'prayers':return PRAYER_IDS.filter(id=>state.done[id]).length;case'dhikr':return state.daily.dhikr;case'verses':return state.daily.verses;case'pages':return state.daily.pages;case'surahs':return state.daily.surahs;case'euros':return state.daily.euros;case'tasks':return Object.keys(state.done).length;}return 0;}
+function metricVal(m){switch(m){case'prayers':return PRAYER_IDS.filter(id=>state.done[id]).length;case'dhikr':return state.daily.dhikr;case'verses':return state.daily.verses;case'pages':return state.daily.pages;case'surahs':return state.daily.surahs;case'quiz':return state.daily.quiz;case'euros':return state.daily.euros;case'tasks':return Object.keys(state.done).length;}return 0;}
 function claimQuest(q){ensureDay();if(state.daily.claimed[q.id]||metricVal(q.metric)<q.goal)return;state.daily.claimed[q.id]=true;state.baraka+=q.baraka;if(q.xp>0&&q.cat)award(q.cat,q.xp,$('#barakaChip'));save();updateBaraka();burst(40);beep(1000,.2,'triangle',.15);toast('✦ +'+q.baraka+' Baraka'+(q.xp?(' · +'+q.xp+' XP'):''));renderDay();renderHome();}
 
+/* ---------- render: rewards preview ---------- */
+function renderRewards(){const gp=globalPoints(),gl=globalLevel().level,sk=skin();const si=Math.min(Math.floor((gl-1)/4),ORB_STAGES.length-1);const R=[];
+  if(si<ORB_STAGES.length-1){const tl=(si+1)*4+1,sl=Math.max(1,si*4+1),sp=globalPtsForLevel(sl),tp=globalPtsForLevel(tl),pct=Math.max(0,Math.min(1,(gp-sp)/(tp-sp)));R.push({grad:`radial-gradient(circle at 35% 30%,${sk.orb[0]},${sk.orb[1]})`,k:'Prochain titre',n:ORB_STAGES[si+1],d:'encore '+nf.format(Math.max(0,tp-gp))+' pts',pct,cc:sk.accent});}
+  const ns=SKINS.find(s=>!(gl>=s.req||state.purchased.includes(s.id)));if(ns){const sl=Math.max(1,gl),sp=globalPtsForLevel(sl),tp=globalPtsForLevel(ns.req),pct=Math.max(0,Math.min(1,(gp-sp)/Math.max(1,tp-sp)));R.push({grad:`radial-gradient(circle at 35% 30%,${ns.orb[0]},${ns.orb[1]})`,k:'Skin à venir',n:ns.name,d:state.baraka>=ns.price?('achetable ✦'+ns.price):('niv.'+ns.req+' ou ✦'+ns.price),pct,cc:ns.accent});}
+  const rc=state.cats.find(c=>c.type==='money');if(rc){const rk=rankFor(state.euros,rc.ranks);if(rk.nextName){const pct=Math.max(0,Math.min(1,(state.euros-rk.prevAt)/(rk.nextAt-rk.prevAt)));R.push({grad:'radial-gradient(circle at 35% 30%,#E9C46A,#C98A1E)',k:'Rang richesse',n:rk.nextName,d:'encore '+nf.format(rk.nextAt-state.euros)+'€',pct,cc:'#C98A1E'});}}
+  $('#rewardsWrap').innerHTML=R.length?('<div class="sec-strip-label">🔓 Récompenses à débloquer</div><div class="rewards">'+R.map(r=>`<div class="reward" style="--cc:${r.cc}"><div class="rp" style="background:${r.grad}"><span class="rlock">🔒</span></div><div class="rk">${r.k}</div><div class="rn">${r.n}</div><div class="rd">${r.d}</div><div class="rbar"><i style="width:${(r.pct*100).toFixed(0)}%"></i></div></div>`).join('')+'</div>'):'';}
+
 /* ---------- render: home ---------- */
-function renderHome(){ensureDay();const gl=globalLevel();const si=Math.min(Math.floor((gl.level-1)/4),ORB_STAGES.length-1);$('#orbStage').textContent=ORB_STAGES[si];const on=state.streak>0;$('#globalCard').innerHTML=`<div class="global-top"><span class="global-lvl">Niveau global <b>${gl.level}</b>${boostActive()?' · ⚡×2':''}</span><span class="streak ${on?'':'off'}">🔥 ${state.streak} ${state.streak>1?'jours':'jour'}</span></div><div class="bar"><i style="width:${(gl.pct*100).toFixed(1)}%"></i></div><div class="bar-meta"><span>${nf.format(gl.into)} / ${nf.format(gl.need)} pts</span><span>${ORB_STAGES[si]}</span></div>`;let h='';for(const c of state.cats){const tint=hexA(c.color,.14);if(c.type==='money'){const rk=rankFor(state.euros,c.ranks);const span=rk.nextAt!=null?(rk.nextAt-rk.prevAt):1;const pct=rk.nextAt!=null?Math.max(0,Math.min(1,(state.euros-rk.prevAt)/span)):1;h+=`<div class="card stat" style="--cc:${c.color};--tint:${tint}"><div class="stat-head"><div class="stat-emoji">${c.emoji}</div><div><div class="stat-name">${c.name}</div><div class="stat-sub">${rk.name}</div></div><div class="stat-lvl"><b>${nf.format(state.euros)}€</b><span>fortune</span></div></div><div class="bar"><i style="width:${(pct*100).toFixed(1)}%"></i></div>${rk.nextName?`<div class="next-tier"><span class="lock">🔒</span>Prochain rang : <b>${rk.nextName}</b> · encore ${nf.format(rk.nextAt-state.euros)}€</div>`:`<div class="next-tier">👑 Rang maximum atteint</div>`}</div>`;}else{const li=levelFromXp(catXp(c.id)),st=stageFor(c,li.level);const nextStage=st.idx<st.arr.length-1?st.arr[st.idx+1]:null;const nextLvl=(st.idx+1)*3+1;h+=`<div class="card stat" style="--cc:${c.color};--tint:${tint}"><div class="stat-head"><div class="stat-emoji">${c.emoji}</div><div><div class="stat-name">${c.name}</div><div class="stat-sub">${st.name}</div></div><div class="stat-lvl"><b>${li.level}</b><span>niveau</span></div></div><div class="bar"><i style="width:${(li.pct*100).toFixed(1)}%"></i></div><div class="bar-meta"><span>${nf.format(li.into)} / ${nf.format(li.need)} pts</span><span>${st.name}</span></div>${nextStage?`<div class="next-tier"><span class="lock">🔒</span>Prochaine évolution : <b>${nextStage}</b> · niveau ${nextLvl}</div>`:`<div class="next-tier">🌟 Évolution ultime atteinte</div>`}</div>`;}}$('#statList').innerHTML=h;updateBaraka();}
+function renderHome(){ensureDay();const gl=globalLevel();const si=Math.min(Math.floor((gl.level-1)/4),ORB_STAGES.length-1);$('#orbStage').textContent=ORB_STAGES[si];const on=state.streak>0;const nextStage=si<ORB_STAGES.length-1?ORB_STAGES[si+1]:null;const nextStageLvl=(si+1)*4+1;const needStage=nextStage?Math.max(0,globalPtsForLevel(nextStageLvl)-globalPoints()):0;$('#globalCard').innerHTML=`<div class="global-top"><span class="global-lvl">Niveau global <b>${gl.level}</b>${boostActive()?' · ⚡×2':''}</span><span class="streak ${on?'':'off'}">🔥 ${state.streak} ${state.streak>1?'jours':'jour'}</span></div><div class="bar"><i style="width:${(gl.pct*100).toFixed(1)}%"></i></div><div class="bar-meta"><span>${nf.format(gl.into)} / ${nf.format(gl.need)} pts</span><span>${ORB_STAGES[si]}</span></div><div class="title-line">✦ Ton titre : <b>${ORB_STAGES[si]}</b>${nextStage?` — encore <b>${nf.format(needStage)} pts</b> pour devenir « ${nextStage} »`:' — titre ultime atteint 🌟'}</div>`;renderRewards();let h='';for(const c of state.cats){const tint=hexA(c.color,.14);if(c.type==='money'){const rk=rankFor(state.euros,c.ranks);const span=rk.nextAt!=null?(rk.nextAt-rk.prevAt):1;const pct=rk.nextAt!=null?Math.max(0,Math.min(1,(state.euros-rk.prevAt)/span)):1;h+=`<div class="card stat" style="--cc:${c.color};--tint:${tint}"><div class="stat-head"><div class="stat-emoji">${c.emoji}</div><div><div class="stat-name">${c.name}</div><div class="stat-sub">${rk.name}</div></div><div class="stat-lvl"><b>${nf.format(state.euros)}€</b><span>fortune</span></div></div><div class="bar"><i style="width:${(pct*100).toFixed(1)}%"></i></div>${rk.nextName?`<div class="next-tier"><span class="lock">🔒</span>Prochain rang : <b>${rk.nextName}</b> · encore ${nf.format(rk.nextAt-state.euros)}€</div>`:`<div class="next-tier">👑 Rang maximum atteint</div>`}</div>`;}else{const li=levelFromXp(catXp(c.id)),st=stageFor(c,li.level);const nextStage=st.idx<st.arr.length-1?st.arr[st.idx+1]:null;const nextLvl=(st.idx+1)*3+1;h+=`<div class="card stat" style="--cc:${c.color};--tint:${tint}"><div class="stat-head"><div class="stat-emoji">${c.emoji}</div><div><div class="stat-name">${c.name}</div><div class="stat-sub">${st.name}</div></div><div class="stat-lvl"><b>${li.level}</b><span>niveau</span></div></div><div class="bar"><i style="width:${(li.pct*100).toFixed(1)}%"></i></div><div class="bar-meta"><span>${nf.format(li.into)} / ${nf.format(li.need)} pts</span><span>${st.name}</span></div>${nextStage?`<div class="next-tier"><span class="lock">🔒</span>Prochaine évolution : <b>${nextStage}</b> · niveau ${nextLvl}</div>`:`<div class="next-tier">🌟 Évolution ultime atteinte</div>`}</div>`;}}$('#statList').innerHTML=h;updateBaraka();}
 
 /* ---------- render: day ---------- */
 function renderQuests(){const qs=todayQuests();let h=`<div class="quests"><h3>🎯 Quêtes du jour</h3><div class="qsub">Réussis-les pour gagner de la Baraka ✦ et de l’XP bonus.</div>`;for(const q of qs){const v=Math.min(metricVal(q.metric),q.goal),pct=v/q.goal*100,claimed=state.daily.claimed[q.id],ready=v>=q.goal;h+=`<div class="quest"><div class="qi">${q.emoji}</div><div class="qmain"><div class="qn">${q.label}</div><div class="qbar"><i style="width:${pct}%"></i></div><div class="qr">${v}/${q.goal} · récompense <b>✦${q.baraka}</b>${q.xp?(' + '+q.xp+' XP'):''}</div></div>${claimed?'<span class="qdone">✓ fait</span>':(ready?`<button class="qclaim" data-quest="${q.id}">Réclamer</button>`:'')}</div>`;}h+='</div>';return h;}
-function renderDay(){ensureDay();$('#questBox').innerHTML=renderQuests();let h='';for(const c of state.cats){let lvlLabel=c.type==='money'?rankFor(state.euros,c.ranks).name:('Niv. '+catLevel(c.id));h+=`<div class="group"><div class="group-head"><span class="ge">${c.emoji}</span><h3>${c.name}</h3><span class="gl">${lvlLabel}</span></div>`;if(c.type==='money'){const rk=rankFor(state.euros,c.ranks);h+=`<div class="money" style="--cc:${c.color}"><div class="row"><input id="eurInput" type="number" inputmode="decimal" placeholder="Montant en €" aria-label="Montant"><button class="btn gold" id="eurAdd">Ajouter</button></div><div class="chips"><button class="chip" data-eur="20">+20</button><button class="chip" data-eur="50">+50</button><button class="chip" data-eur="100">+100</button><button class="chip" data-eur="500">+500</button></div><div class="money-total">Fortune : <b>${nf.format(state.euros)}€</b>${rk.nextName?` — plus que <b style="font-size:13px">${nf.format(rk.nextAt-state.euros)}€</b> avant « ${rk.nextName} »`:''}</div></div>`;}const tks=state.tasks.filter(t=>t.cat===c.id);if(tks.length){h+=`<div class="tasks" style="margin-top:${c.type==='money'?'10px':'0'}">`;for(const t of tks){if(t.type==='counter'){h+=`<div class="task" data-counter="${t.id}" style="--cc:${c.color}"><span class="play">▶</span><span class="task-label">${escapeHtml(t.name)}<div class="tsub">Aujourd’hui : ${state.daily.dhikr} dhikr</div></span><span class="task-pts">farm</span><button class="del" data-del="${t.id}" aria-label="Supprimer">×</button></div>`;}else if(t.type==='reader'){const sub=t.lib==='coran'?('Aujourd’hui : '+state.daily.verses+' verset'+(state.daily.verses>1?'s':'')):('Aujourd’hui : '+state.daily.pages+' page'+(state.daily.pages>1?'s':''));const per=t.lib==='coran'?PPP.coranVerse+'/verset':PPP.esprit+'/page';h+=`<div class="task" data-reader="${t.id}" style="--cc:${c.color}"><span class="play">▶</span><span class="task-label">${escapeHtml(t.name)}<div class="tsub">${sub}</div></span><span class="task-pts">+${per}</span><button class="del" data-del="${t.id}" aria-label="Supprimer">×</button></div>`;}else{const isPrayer=PRAYER_IDS.includes(t.id);const done=!!state.done[t.id];let extra='',cls='',lock='';if(isPrayer){const s=prayerStatus(t.id);if(s.state==='soon'){cls='locked';lock='1';extra=`<div class="pt soon" id="pt-${t.id}">🕐 à ${s.at}</div>`;}else if(s.state==='open'){cls='open';extra=`<div class="pt open" id="pt-${t.id}">⏳ ${fmtDur(s.remain)} pour valider</div>`;}else if(s.state==='late'){cls='locked';lock='1';extra=`<div class="pt late" id="pt-${t.id}">⌛ trop tard (${s.at})</div>`;}}h+=`<div class="task ${done?'done':''} ${cls}" data-id="${t.id}" ${lock?'data-locked="1"':''} style="--cc:${c.color}"><span class="check"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg></span><span class="task-label">${escapeHtml(t.name)}${extra}</span><span class="task-pts">+${t.pts}</span><button class="del" data-del="${t.id}" aria-label="Supprimer">×</button></div>`;}}h+='</div>';}h+='</div>';}$('#taskGroups').innerHTML=h;$('#ntCat').innerHTML=state.cats.filter(c=>c.type==='xp').map(c=>`<option value="${c.id}">${c.emoji} ${c.name}</option>`).join('');}
+function renderDay(){ensureDay();$('#questBox').innerHTML=renderQuests();let h='';for(const c of state.cats){let lvlLabel=c.type==='money'?rankFor(state.euros,c.ranks).name:('Niv. '+catLevel(c.id));h+=`<div class="group"><div class="group-head"><span class="ge">${c.emoji}</span><h3>${c.name}</h3><span class="gl">${lvlLabel}</span></div>`;if(c.type==='money'){const rk=rankFor(state.euros,c.ranks);h+=`<div class="money" style="--cc:${c.color}"><div class="row"><input id="eurInput" type="number" inputmode="decimal" placeholder="Montant en €" aria-label="Montant"><button class="btn gold" id="eurAdd">Ajouter</button></div><div class="chips"><button class="chip" data-eur="20">+20</button><button class="chip" data-eur="50">+50</button><button class="chip" data-eur="100">+100</button><button class="chip" data-eur="500">+500</button></div><div class="money-total">Fortune : <b>${nf.format(state.euros)}€</b>${rk.nextName?` — plus que <b style="font-size:13px">${nf.format(rk.nextAt-state.euros)}€</b> avant « ${rk.nextName} »`:''}</div></div>`;}const tks=state.tasks.filter(t=>t.cat===c.id);if(tks.length){h+=`<div class="tasks" style="margin-top:${c.type==='money'?'10px':'0'}">`;for(const t of tks){if(t.type==='counter'){h+=`<div class="task" data-counter="${t.id}" style="--cc:${c.color}"><span class="play">▶</span><span class="task-label">${escapeHtml(t.name)}<div class="tsub">Aujourd’hui : ${state.daily.dhikr} dhikr</div></span><span class="task-pts">farm</span><button class="del" data-del="${t.id}" aria-label="Supprimer">×</button></div>`;}else if(t.type==='reader'){const sub=t.lib==='coran'?('Aujourd’hui : '+state.daily.verses+' verset'+(state.daily.verses>1?'s':'')):('Aujourd’hui : '+state.daily.pages+' page'+(state.daily.pages>1?'s':''));const per=t.lib==='coran'?PPP.coranVerse+'/verset':PPP.esprit+'/page';h+=`<div class="task" data-reader="${t.id}" style="--cc:${c.color}"><span class="play">▶</span><span class="task-label">${escapeHtml(t.name)}<div class="tsub">${sub}</div></span><span class="task-pts">+${per}</span><button class="del" data-del="${t.id}" aria-label="Supprimer">×</button></div>`;}else if(t.type==='learn'){h+=`<div class="task" data-learn="${t.id}" style="--cc:${c.color}"><span class="play">🎓</span><span class="task-label">${escapeHtml(t.name)}<div class="tsub">Apprends puis teste-toi (+${LESSON_PTS[t.set]}/bonne réponse)</div></span><span class="task-pts">quiz</span><button class="del" data-del="${t.id}" aria-label="Supprimer">×</button></div>`;}else{const isPrayer=PRAYER_IDS.includes(t.id);const done=!!state.done[t.id];let extra='',cls='',lock='';if(isPrayer){const s=prayerStatus(t.id);if(s.state==='soon'){cls='locked';lock='1';extra=`<div class="pt soon" id="pt-${t.id}">🕐 à ${s.at}</div>`;}else if(s.state==='open'){cls='open';extra=`<div class="pt open" id="pt-${t.id}">⏳ ${fmtDur(s.remain)} pour valider</div>`;}else if(s.state==='late'){cls='locked';lock='1';extra=`<div class="pt late" id="pt-${t.id}">⌛ trop tard (${s.at})</div>`;}}h+=`<div class="task ${done?'done':''} ${cls}" data-id="${t.id}" ${lock?'data-locked="1"':''} style="--cc:${c.color}"><span class="check"><svg viewBox="0 0 24 24"><path d="M4 12l5 5L20 6"/></svg></span><span class="task-label">${escapeHtml(t.name)}${extra}</span><span class="task-pts">+${t.pts}</span><button class="del" data-del="${t.id}" aria-label="Supprimer">×</button></div>`;}}h+='</div>';}h+='</div>';}$('#taskGroups').innerHTML=h;$('#ntCat').innerHTML=state.cats.filter(c=>c.type==='xp').map(c=>`<option value="${c.id}">${c.emoji} ${c.name}</option>`).join('');}
 
 /* ---------- render: evo ---------- */
 function renderPrayerSetup(){const box=$('#prayerSetup');const set=state.prayerTimes&&state.prayerTimes.day===todayKey();if(set){const T=state.prayerTimes.times;box.innerHTML=`<div class="pdesc">Après l’heure de chaque prière, tu as <b>1h pour la valider</b>, sinon c’est « trop tard ». Actualisé chaque jour selon ta position.</div><div class="ptimes">${PRAYER_IDS.map(p=>`<span class="ptime"><b>${p[0].toUpperCase()+p.slice(1)}</b> ${T[p]}</span>`).join('')}</div><div class="prow"><button class="btn ghost" id="prayerAuto">📍 Actualiser</button><button class="btn ghost" id="prayerClear">Désactiver</button></div>`;}else{box.innerHTML=`<div class="pdesc">Active un <b>chrono de prière</b> : à partir de l’heure de chaque prière tu as 1h pour la valider. Sans ça, tu peux valider à tout moment.</div><div class="prow"><button class="btn" id="prayerAuto">📍 Utiliser ma position</button><button class="btn ghost" id="prayerManual">✎ Saisir à la main</button></div><div class="pt-form" id="ptForm">${PRAYER_IDS.map(p=>`<label>${p[0].toUpperCase()+p.slice(1)}<input type="time" id="pf-${p}"></label>`).join('')}<button class="btn" id="ptSave">Enregistrer mes horaires</button></div>`;}}
@@ -421,7 +538,7 @@ const modal=$('#modal');let CT=null,RD=null;
 function showModal(){modal.classList.remove('hidden');}
 function hideModal(){modal.classList.add('hidden');modal.innerHTML='';SESS=null;CT=null;RD=null;renderDay();renderHome();}
 function closeModal(){if(SESS&&SESS.xp>0)buildRecap();else hideModal();}
-function buildRecap(){const cat=state.cats.find(c=>c.id===SESS.cat)||{color:'var(--accent)',name:''};let detail='',emoji='✨';if(SESS.kind==='dhikr'){emoji='📿';detail=SESS.dhikr+' dhikr · '+SESS.cycles+' cycle'+(SESS.cycles>1?'s':'');}else if(SESS.kind==='coran'){emoji='🕋';detail=SESS.verses+' verset'+(SESS.verses>1?'s':'')+' lu'+(SESS.verses>1?'s':'');}else if(SESS.kind==='esprit'){emoji='📖';detail=SESS.pages+' page'+(SESS.pages>1?'s':'')+' lue'+(SESS.pages>1?'s':'');}modal.innerHTML=`<div class="modal-body recap" style="--cc:${cat.color}"><div class="remoji">${emoji}</div><div class="rbig">Session terminée</div><div class="rxp">+${SESS.xp}</div><div class="rxpl">points de ${cat.name}</div><div class="rline">${detail}</div><button class="btn" data-recapclose style="background:${cat.color};padding:14px 28px;margin-top:6px">Continuer</button></div>`;burst(80);beep(990,.25,'triangle',.16);vibrate([20,40,20]);}
+function buildRecap(){const cat=state.cats.find(c=>c.id===SESS.cat)||{color:'var(--accent)',name:''};let detail='',emoji='✨';if(SESS.kind==='dhikr'){emoji='📿';detail=SESS.dhikr+' dhikr · '+SESS.cycles+' cycle'+(SESS.cycles>1?'s':'');}else if(SESS.kind==='coran'){emoji='🕋';detail=SESS.verses+' verset'+(SESS.verses>1?'s':'')+' lu'+(SESS.verses>1?'s':'');}else if(SESS.kind==='esprit'){emoji='📖';detail=SESS.pages+' page'+(SESS.pages>1?'s':'')+' lue'+(SESS.pages>1?'s':'');}else if(SESS.kind==='quiz'){emoji='🎓';detail=SESS.correct+' / '+SESS.total+' bonnes réponses';}modal.innerHTML=`<div class="modal-body recap" style="--cc:${cat.color}"><div class="remoji">${emoji}</div><div class="rbig">Session terminée</div><div class="rxp">+${SESS.xp}</div><div class="rxpl">points de ${cat.name}</div><div class="rline">${detail}</div><button class="btn" data-recapclose style="background:${cat.color};padding:14px 28px;margin-top:6px">Continuer</button></div>`;burst(80);beep(990,.25,'triangle',.16);vibrate([20,40,20]);}
 
 /* counter */
 function openCounter(taskId){const t=state.tasks.find(x=>x.id===taskId);startSess(t.cat,'dhikr');CT={idx:0,count:0,taskId,cat:t.cat};buildCounter();showModal();}
@@ -432,7 +549,7 @@ function pickDhikr(i){CT.idx=i;CT.count=0;buildCounter();}
 /* reader */
 function openReader(taskId){const t=state.tasks.find(x=>x.id===taskId);startSess(t.cat,t.lib);RD={kind:t.lib,cat:t.cat,taskId};if(t.lib==='coran'){RD.si=Math.floor(Math.random()*CORAN.length);RD.vi=0;buildVerse();}else{RD.view='lib';buildReaderLib();}showModal();}
 function buildVerse(){const cat=state.cats.find(c=>c.id===RD.cat),s=CORAN[RD.si],v=s.v[RD.vi];modal.innerHTML=`<div class="modal-top"><button class="icon-btn" data-close>←</button><div class="mt-title">${s.t}</div></div><div class="modal-body" style="--cc:${cat.color}"><div class="reader-page arabic"><div class="vhead">${s.t.split(' — ')[0]} · verset ${RD.vi+1}/${s.v.length}</div><div class="ar">${v[0]}</div><div class="tr">${v[1]}</div><div class="fr">${v[2]}</div></div><button class="btn bignext" data-nextverse style="background:${cat.color}">Suivant ›</button><p class="muted-note">Chaque verset lu = +${PPP.coranVerse} Foi. Reviens en arrière (←) pour voir ton récap.</p></div>`;}
-function nextVerse(){ensureDay();const s=CORAN[RD.si],el=$('[data-nextverse]');award(RD.cat,PPP.coranVerse,el);SESS.verses++;state.daily.verses++;if(RD.vi>=s.v.length-1){state.daily.surahs++;SESS.surahs++;RD.si=Math.floor(Math.random()*CORAN.length);RD.vi=0;}else RD.vi++;save();beep(600,.05,'sine',.08);vibrate(10);buildVerse();}
+function nextVerse(){ensureDay();const s=CORAN[RD.si];award(RD.cat,PPP.coranVerse,null);SESS.verses++;state.daily.verses++;if(RD.vi>=s.v.length-1){state.daily.surahs++;SESS.surahs++;RD.si=Math.floor(Math.random()*CORAN.length);RD.vi=0;}else RD.vi++;save();beep(600,.05,'sine',.08);vibrate(10);buildVerse();}
 function buildReaderLib(){const cat=state.cats.find(c=>c.id===RD.cat);modal.innerHTML=`<div class="modal-top"><button class="icon-btn" data-close>←</button><div class="mt-title">📖 Lecture</div></div><div class="modal-body"><div class="lib">${ESPRIT.map((it,i)=>{const read=state.daily.readToday['e'+i];return`<div class="libitem ${read?'read':''}" data-open="${i}" style="--cc:${cat.color}"><div class="lt"><div class="ltn">${it.title}</div><div class="lts">${read?'déjà lu aujourd’hui':it.pages.length+' pages'}</div></div><div class="lgo">›</div></div>`;}).join('')}</div><p class="muted-note">Tes pages lues font monter ton Esprit. Reviens (←) pour ton récap.</p></div>`;}
 function openReaderItem(i){RD.bi=i;RD.item=ESPRIT[i];RD.page=0;RD.max=0;buildReaderPage();}
 function buildReaderPage(){const cat=state.cats.find(c=>c.id===RD.cat),it=RD.item,tot=it.pages.length,last=RD.page>=tot-1;modal.innerHTML=`<div class="modal-top"><button class="icon-btn" data-backlib>←</button><div class="mt-title">${it.title}</div></div><div class="modal-body" style="--cc:${cat.color}"><div class="reader-page"><div class="fr" style="text-align:left">${it.pages[RD.page]}</div></div><div class="reader-nav"><button class="btn ghost" data-prev ${RD.page===0?'disabled':''}>‹</button><span class="pg">page ${RD.page+1} / ${tot}</span>${last?`<button class="btn" data-finishbook style="background:${cat.color}">Terminer (+${(RD.max+1)*PPP.esprit})</button>`:'<button class="btn" data-next>Suivant ›</button>'}</div></div>`;}
@@ -440,9 +557,24 @@ function readerNext(){if(RD.page<RD.item.pages.length-1){RD.page++;RD.max=Math.m
 function readerPrev(){if(RD.page>0){RD.page--;buildReaderPage();}}
 function finishBook(){ensureDay();const pages=RD.max+1;const g=award(RD.cat,pages*PPP.esprit,$('#barakaChip'));state.daily.pages+=pages;state.daily.readToday['e'+RD.bi]=true;save();toast('📖 '+pages+' page'+(pages>1?'s':'')+' · +'+g+' Esprit');beep(900,.16,'triangle',.14);buildReaderLib();}
 
+/* learn + quiz */
+let LR=null;
+function openLearn(taskId){const t=state.tasks.find(x=>x.id===taskId);startSess(t.cat,'quiz');LR={set:t.set,cat:t.cat,taskId};buildLearnLib();showModal();}
+function buildLearnLib(){const cat=state.cats.find(c=>c.id===LR.cat),list=LESSONS[LR.set],isEn=LR.set==='anglais';modal.innerHTML=`<div class="modal-top"><button class="icon-btn" data-close>←</button><div class="mt-title">${isEn?'🗣️ Anglais':'🎓 Savoir'}</div></div><div class="modal-body"><div class="lib">${list.map((l,i)=>{const best=state.daily.readToday[LR.set+i];return`<div class="libitem" data-openlesson="${i}" style="--cc:${cat.color}"><div class="lt"><div class="ltn">${l.emoji} ${l.title}</div><div class="lts">${best?('score du jour : '+best):(l.quiz.length+' questions · apprends puis teste-toi')}</div></div><div class="lgo">›</div></div>`;}).join('')}</div><p class="muted-note">Apprends la leçon, puis gagne des points selon tes bonnes réponses.</p></div>`;}
+function openLesson(i){LR.li=i;LR.lesson=LESSONS[LR.set][i];LR.page=0;buildTeach();}
+function buildTeach(){const cat=state.cats.find(c=>c.id===LR.cat),l=LR.lesson,tot=l.teach.length,last=LR.page>=tot-1;modal.innerHTML=`<div class="modal-top"><button class="icon-btn" data-backlearnlib>←</button><div class="mt-title">${l.emoji} ${l.title}</div></div><div class="modal-body" style="--cc:${cat.color}"><div class="reader-page"><div class="fr" style="text-align:left">${l.teach[LR.page]}</div></div><div class="reader-nav"><button class="btn ghost" data-teachprev ${LR.page===0?'disabled':''}>‹</button><span class="pg">${LR.page+1} / ${tot}</span>${last?`<button class="btn" data-startquiz style="background:${cat.color}">Commencer le quiz ▶</button>`:'<button class="btn" data-teachnext>Suivant ›</button>'}</div></div>`;}
+function teachNext(){if(LR.page<LR.lesson.teach.length-1){LR.page++;beep(600,.05,'sine',.08);buildTeach();}}
+function teachPrev(){if(LR.page>0){LR.page--;buildTeach();}}
+function startQuiz(){LR.qi=0;LR.correct=0;LR.answered=false;LR.chosen=-1;buildQuiz();}
+function buildQuiz(){const cat=state.cats.find(c=>c.id===LR.cat),l=LR.lesson,q=l.quiz[LR.qi];const opts=q.opts.map((o,i)=>{let cls='';if(LR.answered){if(i===q.a)cls='correct';else if(i===LR.chosen)cls='wrong';}return`<button class="qopt ${cls}" data-opt="${i}" ${LR.answered?'disabled':''}>${escapeHtml(o)}</button>`;}).join('');const feed=LR.answered?(LR.chosen===q.a?`<div class="qfeed" style="color:var(--good)">✓ Bonne réponse !</div>`:`<div class="qfeed" style="color:var(--danger)">✗ Raté — la bonne réponse est en vert</div>`):'';modal.innerHTML=`<div class="modal-top"><button class="icon-btn" data-close>←</button><div class="mt-title">${l.emoji} Quiz</div></div><div class="modal-body" style="--cc:${cat.color}"><div class="qprog">Question ${LR.qi+1} / ${l.quiz.length} · ${LR.correct} ✓</div><div class="quiz"><div class="qq">${escapeHtml(q.q)}</div><div class="qopts">${opts}</div>${feed}${LR.answered?`<button class="btn" data-nextq style="background:${cat.color};margin-top:4px">${LR.qi>=l.quiz.length-1?'Voir mon score 🎉':'Question suivante ›'}</button>`:''}</div></div>`;}
+function answerQuiz(idx){if(LR.answered)return;LR.answered=true;LR.chosen=idx;const q=LR.lesson.quiz[LR.qi];if(idx===q.a){LR.correct++;beep(880,.14,'triangle',.14);vibrate(20);}else{beep(300,.14,'sine',.12);vibrate([20,40]);}buildQuiz();}
+function nextQuiz(){if(LR.qi>=LR.lesson.quiz.length-1){finishQuiz();return;}LR.qi++;LR.answered=false;LR.chosen=-1;buildQuiz();}
+function finishQuiz(){ensureDay();const per=LESSON_PTS[LR.set];award(LR.cat,LR.correct*per,null);SESS.correct=LR.correct;SESS.total=LR.lesson.quiz.length;state.daily.quiz+=LR.correct;state.daily.readToday[LR.set+LR.li]=LR.correct+'/'+LR.lesson.quiz.length;save();buildRecap();}
+
 /* ---------- events ---------- */
-modal.addEventListener('click',e=>{const t=e.target;if(t.closest('[data-recapclose]')){hideModal();return;}if(t.closest('[data-close]')){closeModal();return;}if(t.closest('[data-reset]')){CT.count=0;buildCounter();return;}const dh=t.closest('[data-dh]');if(dh){pickDhikr(+dh.getAttribute('data-dh'));return;}if(t.closest('#ringEl')){ringTap();return;}if(t.closest('[data-nextverse]')){nextVerse();return;}if(t.closest('[data-backlib]')){buildReaderLib();return;}const op=t.closest('[data-open]');if(op){openReaderItem(+op.getAttribute('data-open'));return;}if(t.closest('[data-next]')){readerNext();return;}if(t.closest('[data-prev]')){readerPrev();return;}if(t.closest('[data-finishbook]')){finishBook();return;}});
-$('#taskGroups').addEventListener('click',e=>{const del=e.target.closest('[data-del]');if(del){const id=del.getAttribute('data-del');state.tasks=state.tasks.filter(t=>t.id!==id);delete state.done[id];save();renderDay();renderHome();return;}if($('#view-day').classList.contains('editing'))return;const cnt=e.target.closest('[data-counter]');if(cnt){openCounter(cnt.getAttribute('data-counter'));return;}const rd=e.target.closest('[data-reader]');if(rd){openReader(rd.getAttribute('data-reader'));return;}const task=e.target.closest('[data-id]');if(task){const id=task.getAttribute('data-id');if(PRAYER_IDS.includes(id)&&!state.done[id]){const s=prayerStatus(id);if(s.state==='soon'){toast('🕐 Pas encore l’heure — à '+s.at);beep(300,.1);return;}if(s.state==='late'){toast('⌛ Trop tard pour valider cette prière');beep(300,.1);return;}}toggleTask(id,task);return;}if(e.target.closest('#eurAdd')){const v=parseFloat($('#eurInput').value);if(v>0){addEuros(Math.round(v));$('#eurInput').value='';}return;}const chip=e.target.closest('[data-eur]');if(chip)addEuros(parseInt(chip.getAttribute('data-eur')));});
+modal.addEventListener('click',e=>{const t=e.target;if(t.closest('[data-recapclose]')){hideModal();return;}if(t.closest('[data-close]')){closeModal();return;}if(t.closest('[data-reset]')){CT.count=0;buildCounter();return;}const dh=t.closest('[data-dh]');if(dh){pickDhikr(+dh.getAttribute('data-dh'));return;}if(t.closest('#ringEl')){ringTap();return;}if(t.closest('[data-nextverse]')){nextVerse();return;}if(t.closest('[data-backlib]')){buildReaderLib();return;}const op=t.closest('[data-open]');if(op){openReaderItem(+op.getAttribute('data-open'));return;}if(t.closest('[data-next]')){readerNext();return;}if(t.closest('[data-prev]')){readerPrev();return;}if(t.closest('[data-finishbook]')){finishBook();return;}
+  if(t.closest('[data-backlearnlib]')){buildLearnLib();return;}const ol=t.closest('[data-openlesson]');if(ol){openLesson(+ol.getAttribute('data-openlesson'));return;}if(t.closest('[data-teachnext]')){teachNext();return;}if(t.closest('[data-teachprev]')){teachPrev();return;}if(t.closest('[data-startquiz]')){startQuiz();return;}const qo=t.closest('[data-opt]');if(qo){answerQuiz(+qo.getAttribute('data-opt'));return;}if(t.closest('[data-nextq]')){nextQuiz();return;}});
+$('#taskGroups').addEventListener('click',e=>{const del=e.target.closest('[data-del]');if(del){const id=del.getAttribute('data-del');state.tasks=state.tasks.filter(t=>t.id!==id);delete state.done[id];save();renderDay();renderHome();return;}if($('#view-day').classList.contains('editing'))return;const cnt=e.target.closest('[data-counter]');if(cnt){openCounter(cnt.getAttribute('data-counter'));return;}const rd=e.target.closest('[data-reader]');if(rd){openReader(rd.getAttribute('data-reader'));return;}const ln=e.target.closest('[data-learn]');if(ln){openLearn(ln.getAttribute('data-learn'));return;}const task=e.target.closest('[data-id]');if(task){const id=task.getAttribute('data-id');if(PRAYER_IDS.includes(id)&&!state.done[id]){const s=prayerStatus(id);if(s.state==='soon'){toast('🕐 Pas encore l’heure — à '+s.at);beep(300,.1);return;}if(s.state==='late'){toast('⌛ Trop tard pour valider cette prière');beep(300,.1);return;}}toggleTask(id,task);return;}if(e.target.closest('#eurAdd')){const v=parseFloat($('#eurInput').value);if(v>0){addEuros(Math.round(v));$('#eurInput').value='';}return;}const chip=e.target.closest('[data-eur]');if(chip)addEuros(parseInt(chip.getAttribute('data-eur')));});
 $('#questBox').addEventListener('click',e=>{const q=e.target.closest('[data-quest]');if(q){const qq=todayQuests().find(x=>x.id===q.getAttribute('data-quest'));if(qq)claimQuest(qq);}});
 $('#editToggle').addEventListener('click',()=>{const v=$('#view-day');v.classList.toggle('editing');const on=v.classList.contains('editing');$('#addForm').classList.toggle('hidden',!on);$('#editToggle').textContent=on?'✓ Terminé':'✎ Modifier mes tâches';});
 $('#ntAdd').addEventListener('click',()=>{const name=$('#ntName').value.trim();const pts=parseInt($('#ntPts').value)||10;const cat=$('#ntCat').value;if(!name)return;state.tasks.push({id:'t'+(state.seq++),cat,name,pts:Math.max(1,Math.min(999,pts)),type:'check'});save();$('#ntName').value='';renderDay();renderHome();beep(700,.1);});
