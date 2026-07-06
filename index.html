@@ -234,6 +234,7 @@
   .heroSvg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 6px 8px rgba(0,0,0,.28))}
   .class-banner{width:100%;margin-bottom:12px;border:none;border-radius:14px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;background:linear-gradient(180deg,#7d63e0,#5b44d4);color:#fff;box-shadow:0 8px 18px rgba(91,68,212,.4);animation:bannerPulse 1.6s ease-in-out infinite}
   @keyframes bannerPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+  .class-hint{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:11px 13px;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:12px;line-height:1.5}.class-hint b{color:var(--text)}
   .class-list{display:flex;flex-direction:column;gap:11px;margin-top:6px}
   .class-card{display:flex;align-items:center;gap:13px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px;cursor:pointer;box-shadow:var(--shadow-sm)}
   .class-card:active{transform:scale(.99)}
@@ -535,8 +536,9 @@ const DEFAULT_TASKS=[
   {id:'anglais',cat:'langues',name:'Anglais — Leçon & Quiz',pts:0,type:'learn',set:'anglais'},
 ];
 const CLASS_UNLOCK_LEVEL=8;
+const CLASS_UNLOCK_FLOOR=15;
 const CLASSES={
-  novice:{name:'Novice',emoji:'🧍',desc:'Aucune voie encore. Choisis ta classe au niveau '+CLASS_UNLOCK_LEVEL+'.',atkMul:1,pvMul:1,crit:0,def:0},
+  novice:{name:'Novice',emoji:'🧍',desc:'Débute avec des armes de fortune (bâton, gourdin). Bats ton 1er boss et atteins l’étage '+CLASS_UNLOCK_FLOOR+' pour choisir ta classe.',atkMul:1,pvMul:1,crit:0,def:0},
   assassin:{name:'Assassin',emoji:'🗡️',desc:'Dagues rapides, critiques dévastateurs. Fragile mais mortel.',type:'dagger',atkMul:1.1,pvMul:.9,crit:15,def:0},
   chevalier:{name:'Chevalier',emoji:'🛡️',desc:'Épée & armure lourde. Tank robuste qui encaisse tout.',type:'sword',atkMul:1,pvMul:1.35,crit:0,def:10},
   faucheur:{name:'Faucheur',emoji:'💀',desc:'Faux immense, dégâts bruts colossaux.',type:'scythe',atkMul:1.25,pvMul:1,crit:5,def:2},
@@ -813,8 +815,8 @@ function drawHero(){
 let CB=null, autoTimer=null;
 function ensureBattle(){const hs=heroStats();const mob=mobAt(state.floor);if(!CB||CB.floor!==state.floor){CB={floor:state.floor,hp:hs.pvmax,mobHP:mob.hp,busy:false};}CB.hp=Math.min(CB.hp,hs.pvmax);}
 function renderArena(){ensureDay();ensureBattle();const hs=heroStats();const mob=mobAt(state.floor);const k=klass();const hpPct=Math.max(0,CB.hp/hs.pvmax*100),mPct=Math.max(0,CB.mobHP/mob.hp*100);
-  const canChoose=state.klass==='novice'&&hs.level>=CLASS_UNLOCK_LEVEL;
-  const banner=canChoose?`<button class="class-banner" id="chooseClassBtn">⚔️ Niveau ${CLASS_UNLOCK_LEVEL} atteint — <b>choisis ta classe !</b> ›</button>`:'';
+  const canChoose=state.klass==='novice'&&state.floorMax>=CLASS_UNLOCK_FLOOR;
+  const banner=canChoose?`<button class="class-banner" id="chooseClassBtn">⚔️ Étage ${CLASS_UNLOCK_FLOOR} atteint — <b>choisis ta classe !</b> ›</button>`:(state.klass==='novice'?`<div class="class-hint">🔒 Classe à débloquer à l’<b>étage ${CLASS_UNLOCK_FLOOR}</b> — bats le 1er boss d’abord (ton record : étage ${state.floorMax}). Teste et améliore tes armes de novice !</div>`:'');
   $('#view-arene').innerHTML=`
    <div class="arena-head"><span class="floor-badge">⚔️ Étage <b>${state.floor}</b></span><span class="cur wn">🌍 ${mob.world.name}</span></div>
    ${renderVoies()}
@@ -891,10 +893,10 @@ function voieSkinHint(key){const list=SKINS.filter(s=>s.voie===key);if(!list.len
 function voieRow(emoji,name,lvl,need,pct,stat,hint){return `<div class="voie"><span class="voie-e">${emoji}</span><div class="voie-m"><div class="voie-top"><b>${name}</b><span class="voie-lvl">${lvl}${need?` <span class="voie-need">${need}</span>`:''}</span></div><div class="voie-bar"><i style="width:${(pct*100).toFixed(0)}%"></i></div>${hint?`<div class="voie-skin">${hint}</div>`:''}</div><span class="voie-stat">${stat}</span></div>`;}
 function renderVoies(){let h=`<div class="voies-card"><div class="voies-h">📊 Voies &nbsp;·&nbsp; Niveau global <b class="gl-num">${heroLevel()}</b></div>`;for(const c of state.cats){if(c.type==='money'){const rk=rankFor(state.euros,c.ranks);const span=rk.nextAt!=null?(rk.nextAt-rk.prevAt):1;const pct=rk.nextAt!=null?Math.max(0,Math.min(1,(state.euros-rk.prevAt)/span)):1;const need=rk.nextName?('encore '+nf.format(rk.nextAt-state.euros)+'€'):'max';h+=voieRow(c.emoji,c.name,rk.name,need,pct,'✦ CRIT',voieSkinHint('richesse'));}else{const li=levelFromXp(catXp(c.id));const stat=c.id==='ame'?'❤️ PV':(c.id==='esprit'?'🛡️ DEF':(c.id==='langues'?'⚔️ ATK':'✦'));h+=voieRow(c.emoji,c.name,'Niv '+li.level,'encore '+nf.format(li.need-li.into)+' XP',li.pct,stat,voieSkinHint(c.id));}}h+=`<button class="voies-foot" data-goto-day>Chaque voie qui monte = +1 <b>niveau global</b> (débloque classes, armes, skins) — Journée ›</button></div>`;return h;}
 function renderShop(){const hl=heroLevel();const k=klass();const kp=CLASS_PAL[state.klass];let h='';
-  h+=`<div class="sec-label">Classe</div><div class="gear"><div class="gic" style="background:linear-gradient(160deg,${kp.p},${kp.s});color:#fff">${k.emoji}</div><div class="gmain"><div class="gn">${k.name}</div><div class="gs">${k.desc}</div></div>${state.klass==='novice'?(hl>=CLASS_UNLOCK_LEVEL?'<button class="gbtn buy" id="chooseClassBtn2">Choisir</button>':`<button class="gbtn lock" disabled>🔒 Nv ${CLASS_UNLOCK_LEVEL}</button>`):''}</div>`;
+  h+=`<div class="sec-label">Classe</div><div class="gear"><div class="gic" style="background:linear-gradient(160deg,${kp.p},${kp.s});color:#fff">${k.emoji}</div><div class="gmain"><div class="gn">${k.name}</div><div class="gs">${k.desc}</div></div>${state.klass==='novice'?(state.floorMax>=CLASS_UNLOCK_FLOOR?'<button class="gbtn buy" id="chooseClassBtn2">Choisir</button>':`<button class="gbtn lock" disabled>🔒 étage ${CLASS_UNLOCK_FLOOR}</button>`):''}</div>`;
   h+=`<div class="sec-label">🗡️ Armes${state.klass!=='novice'?' · voie du '+k.name:''}</div><div class="gear-list">`;
   for(const w of WEAPONS.filter(w=>w.cls==='novice'||w.cls===state.klass))h+=weaponRow(w,hl);
-  h+='</div>';if(state.klass==='novice')h+=`<p class="muted-note">Choisis ta classe (niveau ${CLASS_UNLOCK_LEVEL}) pour débloquer un arbre d'armes de fou.</p>`;
+  h+='</div>';if(state.klass==='novice')h+=`<p class="muted-note">Bats ton 1er boss et atteins l’étage ${CLASS_UNLOCK_FLOOR} pour choisir ta classe et débloquer un arbre d'armes de fou.</p>`;
   h+=`<div class="sec-label">🛡️ Armures</div><div class="gear-list">`;
   for(const a of ARMORS)h+=gearRow(a,'❤️ +'+armorPv(a)+' · 🛡️ +'+armorDef(a),hl);
   h+='</div>';
