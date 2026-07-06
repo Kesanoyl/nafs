@@ -240,6 +240,19 @@
   .skinic{font-size:20px;font-weight:900}
   .rar{font-size:9.5px;font-weight:800;padding:1px 6px;border-radius:6px;vertical-align:middle;letter-spacing:.03em}
   .rar-Rare{background:#2d6fe022;color:#2D8CFF}.rar-Épique{background:#b07bff22;color:#9b7bff}.rar-Légendaire{background:#ffcf5a22;color:#C99A2E}
+  .voies-card{background:var(--surface);border:1px solid var(--border);border-radius:18px;box-shadow:var(--shadow);padding:13px 15px;margin-bottom:12px}
+  .voies-h{font-size:12px;font-weight:800;letter-spacing:.02em;margin-bottom:10px;color:var(--text)}
+  .voie{display:flex;align-items:center;gap:10px;padding:5px 0}
+  .voie-e{font-size:17px;width:22px;text-align:center;flex:none}
+  .voie-m{flex:1;min-width:0}
+  .voie-top{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px}.voie-top b{font-weight:700}.voie-lvl{font-weight:800;color:var(--accent);font-size:12px}
+  .voie-bar{height:7px;border-radius:999px;background:var(--surface-3);overflow:hidden;margin-top:4px}.voie-bar>i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 55%,#fff));transition:width .5s}
+  .voie-stat{font-size:10.5px;font-weight:800;color:var(--muted);flex:none;background:var(--surface-2);padding:3px 7px;border-radius:7px}
+  .voies-foot{width:100%;margin-top:10px;border:none;background:var(--accent-soft);color:var(--accent);border-radius:11px;padding:9px;font-size:12px;font-weight:800;cursor:pointer}
+  .geff{font-size:11px;font-weight:800;color:var(--c-esprit);margin-top:3px}
+  .wlv{font-size:11px;font-weight:900;color:var(--good);background:color-mix(in srgb,var(--good) 15%,transparent);padding:0 6px;border-radius:6px;vertical-align:middle}
+  .gbtns{display:flex;flex-direction:column;gap:6px;flex:none}
+  .gbtn.up{background:var(--good);color:#fff}
   @media (prefers-reduced-motion:reduce){*{animation-duration:.001s!important;transition-duration:.05s!important}}
 </style>
 </head>
@@ -539,11 +552,26 @@ const WORLDS=[
   {name:'Cosmos',tint:'#7c9bff',mobs:['⭐','🌟','☄️','🌠','🪐'],boss:{emoji:'☄️',name:'Dévoreur d’Étoiles'}},
 ];
 function worldOf(n){return WORLDS[Math.floor((n-1)/10)%WORLDS.length];}
-function mobAt(n){const w=worldOf(n);const boss=n%10===0;const emoji=boss?w.boss.emoji:w.mobs[(n-1)%w.mobs.length];let hp=Math.round(30*Math.pow(1.185,n-1));let atk=Math.round(4*Math.pow(1.135,n-1));let gold=Math.round(5*Math.pow(1.12,n-1))+3;if(boss){hp=Math.round(hp*5);atk=Math.round(atk*1.6);gold*=6;}return{n,emoji,hp,atk,gold,boss,world:w,name:boss?('👑 '+w.boss.name):('Créature · '+w.name)};}
-const WFX={as3:'shadow',as4:'venom',as5:'void',ch4:'holy',ch5:'fire',fa4:'soul',fa5:'soul',so3:'frost',so4:'arcane',so5:'cosmic'};
+function mobAt(n){const w=worldOf(n);const boss=n%10===0;const emoji=boss?w.boss.emoji:w.mobs[(n-1)%w.mobs.length];const pos=((n-1)%10);/* montée douce vers le boss */const ramp=1+pos*0.05;let hp=Math.round(46*Math.pow(1.16,n-1)*ramp);let atk=Math.round(6*Math.pow(1.12,n-1)*ramp);let gold=Math.round(6*Math.pow(1.11,n-1))+4;if(boss){hp=Math.round(hp*4);atk=Math.round(atk*1.5);gold*=6;}return{n,emoji,hp,atk,gold,boss,world:w,name:boss?('👑 '+w.boss.name):('Créature · '+w.name)};}
+const WFX={as2:'venom',as3:'shadow',as4:'venom',as5:'void',ch4:'holy',ch5:'fire',fa4:'soul',fa5:'soul',so1:'arcane',so2:'arcane',so3:'frost',so4:'arcane',so5:'cosmic'};
 const FXCOL={fire:'#ff6a2c',frost:'#5ec8ff',shadow:'#7d63e0',holy:'#ffe9a8',void:'#9b7bff',soul:'#57e08a',arcane:'#b98bff',venom:'#2fbf6b',cosmic:'#7c9bff'};
+const FXMETA={fire:{e:'🔥',n:'Brûlure'},venom:{e:'☠️',n:'Poison'},frost:{e:'❄️',n:'Gel'},shadow:{e:'🗡️',n:'Assassinat'},soul:{e:'🟢',n:'Vol de vie'},holy:{e:'✨',n:'Châtiment'},void:{e:'🟣',n:'Perforation'},arcane:{e:'🔮',n:'Arcane'},cosmic:{e:'🌌',n:'Cosmique'}};
+const MAX_WLV=10;
 const PRICE_MULT=1.8;
 function priceOf(it){return Math.round((it.cost||0)*PRICE_MULT);}
+function wlvl(id){return state.wlv&&state.wlv[id]||0;}
+function weaponAtk(w){return Math.round((w.atk||0)*(1+wlvl(w.id)*0.08));}
+function upgCost(w){const l=wlvl(w.id);return Math.round(Math.max(50,w.cost||50)*0.3*(l+1)*Math.pow(1.25,l));}
+function effectDesc(w){const fx=WFX[w.id];if(!fx)return'';const l=wlvl(w.id),m=FXMETA[fx];switch(fx){
+  case'fire':return`${m.e} ${m.n} ${Math.min(60,18+l*4)}% · 2 tours`;
+  case'venom':return`${m.e} ${m.n} ${Math.min(70,22+l*4)}% · 3 tours`;
+  case'frost':return`${m.e} ${m.n} ${Math.min(45,10+l*3)}%`;
+  case'shadow':return`${m.e} ${m.n} ${Math.min(50,12+l*3)}%`;
+  case'soul':return`${m.e} ${m.n} ${Math.min(40,10+l*3)}%`;
+  case'holy':return`${m.e} ${m.n} +${25+l*3}% vs boss`;
+  case'void':return`${m.e} ${m.n} +${8+l*2}% dégâts`;
+  case'arcane':return`${m.e} ${m.n} ${Math.min(50,15+l*3)}%`;
+  case'cosmic':return`${m.e} ${m.n} (vol de vie + brûlure)`;}return'';}
 const BOOST_COST=30;
 const QUEST_POOL=[
   {id:'q_prayers',emoji:'🕌',label:'Accomplir tes 5 prières',goal:5,metric:'prayers',baraka:18,xp:40,cat:'ame'},
@@ -561,7 +589,7 @@ const freshDaily=()=>({dhikr:0,verses:0,pages:0,surahs:0,quiz:0,kills:0,euros:0,
 const defaultState=()=>({cats:JSON.parse(JSON.stringify(DEFAULT_CATS)),tasks:JSON.parse(JSON.stringify(DEFAULT_TASKS)),
   xp:{ame:0,esprit:0,langues:0},euros:0,day:todayKey(),done:{},daily:freshDaily(),streak:0,streakDay:null,
   baraka:0,boostDay:null,geo:null,prayerTimes:null,
-  floor:1,floorMax:1,gold:0,klass:'novice',skin:'base',gear:{weapon:'w_stick',armor:'ar0'},owned:['w_stick','ar0'],
+  floor:1,floorMax:1,gold:0,klass:'novice',skin:'base',gear:{weapon:'w_stick',armor:'ar0'},owned:['w_stick','ar0'],wlv:{},
   life:{dhikr:0,verses:0,quiz:0,kills:0,pages:0},
   theme:null,muted:false,seq:1});
 let state=load();
@@ -570,6 +598,7 @@ function migrateCombat(){
   if(!state.klass)state.klass='novice';
   if(!state.skin||typeof state.skin!=='string')state.skin='base';
   if(!state.life)state.life={dhikr:0,verses:0,quiz:0,kills:0,pages:0};
+  if(!state.wlv||typeof state.wlv!=='object')state.wlv={};
   if(state.floorMax==null)state.floorMax=state.floor||1;
   if(!state.gear||!WEAPONS.find(w=>w.id===state.gear.weapon))state.gear={weapon:'w_stick',armor:'ar0'};
   if(!ARMORS.find(a=>a.id===state.gear.armor))state.gear.armor='ar0';
@@ -604,7 +633,7 @@ function life(){return state.life||(state.life={dhikr:0,verses:0,quiz:0,kills:0,
 function equippedArmor(){return ARMORS.find(a=>a.id===state.gear.armor)||ARMORS[0];}
 function equippedWeapon(){return WEAPONS.find(w=>w.id===state.gear.weapon)||WEAPONS[0];}
 function klass(){return CLASSES[state.klass]||CLASSES.novice;}
-function gearStats(){const s={atk:0,pv:0,def:0,crit:0};const w=equippedWeapon(),a=equippedArmor();s.atk+=w.atk||0;s.crit+=w.crit||0;s.pv+=a.pv||0;s.def+=a.def||0;return s;}
+function gearStats(){const s={atk:0,pv:0,def:0,crit:0};const w=equippedWeapon(),a=equippedArmor();s.atk+=weaponAtk(w);s.crit+=w.crit||0;s.pv+=a.pv||0;s.def+=a.def||0;return s;}
 function heroLevel(){const a=catLevel('ame'),e=catLevel('esprit'),l=(state.xp['langues']!=null?catLevel('langues'):0);const rc=state.cats.find(c=>c.type==='money');const ri=rc?rankFor(state.euros,rc.ranks).cur:0;return a+e+l+ri;}
 function heroStats(){const g=gearStats(),k=klass();const a=catLevel('ame'),e=catLevel('esprit'),l=(state.xp['langues']!=null?catLevel('langues'):0);const rc=state.cats.find(c=>c.type==='money');const ri=rc?rankFor(state.euros,rc.ranks).cur:0;const atk=Math.round((6+a*3+l*2+g.atk)*(k.atkMul||1));const pvmax=Math.round((60+(a+e+l)*6+ri*20+g.pv)*(k.pvMul||1));const crit=Math.min(70,5+e*2+g.crit+(k.crit||0));const def=ri*2+g.def+(k.def||0);return{atk,pvmax,crit,def,level:a+e+l+ri};}
 function skinUnlocked(s){try{return s.cond();}catch(e){return false;}}
@@ -695,6 +724,7 @@ function renderArena(){ensureDay();ensureBattle();const hs=heroStats();const mob
   const banner=canChoose?`<button class="class-banner" id="chooseClassBtn">⚔️ Niveau ${CLASS_UNLOCK_LEVEL} atteint — <b>choisis ta classe !</b> ›</button>`:'';
   $('#view-arene').innerHTML=`
    <div class="arena-head"><span class="floor-badge">⚔️ Étage <b>${state.floor}</b></span><span class="cur wn">${mob.world.name}</span><span class="cur or">🪙 ${nf.format(state.gold)}</span><span class="cur bk">✦ ${nf.format(state.baraka)}</span></div>
+   ${renderVoies()}
    ${banner}
    <div class="arena" style="background:linear-gradient(180deg,${mob.world.tint}2e,${mob.world.tint}10,var(--surface))">
      <div class="fighter hero"><div class="hpwrap"><div class="hp hero"><i style="width:${hpPct}%"></i></div><div class="hptext">${Math.max(0,Math.ceil(CB.hp))} / ${hs.pvmax} PV</div></div><div class="fbody herofig" id="heroBody">${drawHero()}</div><div class="fname">${k.emoji} ${k.name} · Nv ${hs.level}</div></div>
@@ -710,8 +740,28 @@ function renderArena(){ensureDay();ensureBattle();const hs=heroStats();const mob
 function updateBattleUI(){const hs=heroStats(),mob=mobAt(state.floor);const hi=document.querySelector('.hp.hero>i'),mi=document.querySelector('.hp.mob>i');if(hi)hi.style.width=Math.max(0,CB.hp/hs.pvmax*100)+'%';if(mi)mi.style.width=Math.max(0,CB.mobHP/mob.hp*100)+'%';const ht=document.querySelectorAll('.hptext');if(ht[0])ht[0].textContent=Math.max(0,Math.ceil(CB.hp))+' / '+hs.pvmax+' PV';if(ht[1])ht[1].textContent=Math.max(0,Math.ceil(CB.mobHP))+' / '+mob.hp+' PV';}
 function animateAttack(who){const el=$(who==='hero'?'#heroBody':'#mobBody');if(el){const cls=who==='hero'?'lunge-r':'lunge-l';el.classList.add(cls);setTimeout(()=>el.classList.remove(cls),160);}const foe=$(who==='hero'?'#mobBody':'#heroBody');if(foe){foe.classList.add('hit');setTimeout(()=>foe.classList.remove('hit'),300);}}
 function hitFx(){const w=equippedWeapon();const col=WFX[w.id]?FXCOL[WFX[w.id]]:'#ffffff';const f=$('.fighter.mob');if(!f)return;const d=document.createElement('div');d.className='hitfx';d.style.setProperty('--fx',col);f.appendChild(d);setTimeout(()=>d.remove(),400);}
-function floatDmg(who,text,crit,positive){const f=$(who==='hero'?'.fighter.hero':'.fighter.mob');if(!f)return;const d=document.createElement('div');d.className='dmg'+(crit?' crit':'');d.textContent=(typeof text==='number'?('-'+text):text);d.style.color=positive?'#39D39B':(who==='hero'?'#FF6B7A':(crit?'#FFD36B':'#fff'));f.appendChild(d);setTimeout(()=>d.remove(),820);}
-function attack(){ensureBattle();if(CB.busy)return;const hs=heroStats(),mob=mobAt(state.floor);const crit=Math.random()*100<hs.crit;const dmg=Math.max(1,Math.round(hs.atk*(crit?2:1)*(0.85+Math.random()*0.3)));CB.mobHP-=dmg;animateAttack('hero');hitFx();floatDmg('mob',dmg,crit,false);beep(crit?720:520,.06,'square',.07);vibrate(crit?24:9);if(CB.mobHP<=0){CB.mobHP=0;updateBattleUI();victory(mob);return;}const mdmg=Math.max(1,Math.round((mob.atk-hs.def)*(0.85+Math.random()*0.3)));CB.hp-=mdmg;setTimeout(()=>{animateAttack('mob');floatDmg('hero',mdmg,false,false);},150);if(CB.hp<=0){CB.hp=0;updateBattleUI();setTimeout(defeat,320);return;}updateBattleUI();}
+function floatDmg(who,text,crit,positive,pre){const f=$(who==='hero'?'.fighter.hero':'.fighter.mob');if(!f)return;const d=document.createElement('div');d.className='dmg'+(crit?' crit':'');d.textContent=(pre?pre+' ':'')+(typeof text==='number'?('-'+text):text);d.style.color=positive?'#39D39B':(who==='hero'?'#FF6B7A':(crit?'#FFD36B':'#fff'));d.style.left=(38+Math.random()*24)+'%';f.appendChild(d);setTimeout(()=>d.remove(),820);}
+function attack(){ensureBattle();if(CB.busy)return;const hs=heroStats(),mob=mobAt(state.floor),w=equippedWeapon(),fx=WFX[w.id],l=wlvl(w.id);
+  // 1) DoT (brûlure/poison) en début de tour
+  if(CB.dot&&CB.dot.turns>0){CB.mobHP-=CB.dot.dmg;floatDmg('mob',CB.dot.dmg,false,false,CB.dot.emoji);CB.dot.turns--;beep(360,.05,'sine',.06);if(CB.mobHP<=0){CB.mobHP=0;updateBattleUI();victory(mob);return;}}
+  // 2) coup du héros + effets à l'impact
+  const crit=Math.random()*100<hs.crit;let dmg=hs.atk*(crit?2:1)*(0.85+Math.random()*0.3);let note=null;
+  if(fx==='void')dmg*=1+(8+l*2)/100;
+  if(fx==='holy'&&mob.boss)dmg*=1+(25+l*3)/100;
+  if(fx==='cosmic')dmg*=1.1;
+  if(fx==='shadow'&&Math.random()*100<Math.min(50,12+l*3)){dmg+=hs.atk*1.5;note='🗡️';}
+  if(fx==='arcane'&&Math.random()*100<Math.min(50,15+l*3)){dmg+=hs.atk*0.8;note='🔮';}
+  dmg=Math.max(1,Math.round(dmg));CB.mobHP-=dmg;animateAttack('hero');hitFx();floatDmg('mob',dmg,crit,false,note);beep(crit?720:520,.06,'square',.07);vibrate(crit?24:9);
+  // vol de vie
+  if(fx==='soul'||fx==='cosmic'){const heal=Math.round(dmg*(fx==='cosmic'?0.15:(10+l*3)/100));if(heal>0){CB.hp=Math.min(hs.pvmax,CB.hp+heal);floatDmg('hero',heal,false,true,'🟢');}}
+  // pose de DoT
+  if((fx==='fire'||fx==='cosmic')&&Math.random()*100<Math.min(60,18+l*4))CB.dot={emoji:'🔥',turns:2,dmg:Math.round(hs.atk*0.35)};
+  else if(fx==='venom'&&Math.random()*100<Math.min(70,22+l*4))CB.dot={emoji:'☠️',turns:3,dmg:Math.round(hs.atk*0.2)};
+  if(CB.mobHP<=0){CB.mobHP=0;updateBattleUI();victory(mob);return;}
+  // gel : le mob rate son tour
+  let frozen=false;if(fx==='frost'&&Math.random()*100<Math.min(45,10+l*3)){frozen=true;floatDmg('mob','❄️ gelé',false,false);}
+  if(!frozen){const mdmg=Math.max(1,Math.round((mob.atk-hs.def)*(0.85+Math.random()*0.3)));CB.hp-=mdmg;setTimeout(()=>{animateAttack('mob');floatDmg('hero',mdmg,false,false);},150);if(CB.hp<=0){CB.hp=0;updateBattleUI();setTimeout(defeat,320);return;}}
+  updateBattleUI();}
 function victory(mob){CB.busy=true;state.gold+=mob.gold;ensureDay();state.daily.kills=(state.daily.kills||0)+1;life().kills++;const mb=$('#mobBody');if(mb)mb.classList.add('dead');floatDmg('mob','+'+mob.gold+' 🪙',true,true);beep(880,.18,'triangle',.14);burst(mob.boss?90:28);updateBaraka();save();setTimeout(()=>{state.floor++;if(state.floor>state.floorMax)state.floorMax=state.floor;CB=null;save();renderArena();toast(mob.boss?('👑 Boss vaincu ! +'+mob.gold+' or'):('Vaincu ! +'+mob.gold+' or'));},520);}
 function defeat(){CB.busy=true;stopAuto();const hb=$('#heroBody');if(hb)hb.classList.add('flash');beep(200,.3,'sawtooth',.1);const hs=heroStats(),mob=mobAt(state.floor);setTimeout(()=>{CB={floor:state.floor,hp:hs.pvmax,mobHP:mob.hp,busy:false};renderArena();toast('💀 Vaincu ! Renforce-toi : prières, quiz, ou meilleur équipement.');},650);}
 function toggleAuto(){if(autoTimer){stopAuto();}else{autoTimer=setInterval(()=>{if($('#view-arene').classList.contains('hidden')){return;}if(CB&&CB.busy)return;attack();},620);}renderArena();}
@@ -720,6 +770,7 @@ function findGear(id){return WEAPONS.find(w=>w.id===id)||ARMORS.find(a=>a.id===i
 function gearSlot(it){return WEAPONS.includes(it)?'weapon':'armor';}
 function buyGear(id){const it=findGear(id);if(!it||state.owned.includes(id)||state.gold<priceOf(it)||heroLevel()<(it.req||0))return;state.gold-=priceOf(it);state.owned.push(id);state.gear[gearSlot(it)]=id;CB=null;save();updateBaraka();renderShop();renderArena();burst(40);beep(900,.18,'triangle',.15);vibrate(30);toast('✅ '+it.name+' acheté et équipé !');}
 function equipGear(id){const it=findGear(id);if(!it||!state.owned.includes(id))return;state.gear[gearSlot(it)]=id;CB=null;save();renderShop();renderArena();beep(760,.12);toast('Équipé : '+it.name);}
+function upgWeapon(id){const w=WEAPONS.find(x=>x.id===id);if(!w||!state.owned.includes(id))return;const l=wlvl(id);if(l>=MAX_WLV)return;const c=upgCost(w);if(state.gold<c)return;state.gold-=c;state.wlv[id]=l+1;CB=null;save();updateBaraka();renderShop();renderArena();burst(30);beep(880,.16,'triangle',.15);vibrate(24);toast('⬆️ '+w.name+' amélioré (+'+(l+1)+')');}
 function chooseClass(id){if(!CLASSES[id]||state.klass!=='novice')return;state.klass=id;const first=WEAPONS.find(w=>w.cls===id);if(first){if(!state.owned.includes(first.id))state.owned.push(first.id);state.gear.weapon=first.id;}CB=null;save();hideModal();renderArena();renderShop();burst(70);beep(1000,.25,'triangle',.16);toast(CLASSES[id].emoji+' Tu es désormais '+CLASSES[id].name+' !');}
 function equipSkin(id){const s=SKINS.find(x=>x.id===id);if(!s||!skinUnlocked(s))return;state.skin=id;CB=null;save();renderShop();renderArena();burst(40);beep(880,.16,'triangle',.15);toast('✨ Skin équipé : '+s.name);}
 function openClassModal(){const cards=Object.keys(CLASSES).filter(id=>id!=='novice').map(id=>{const c=CLASSES[id];const pal=CLASS_PAL[id];return`<div class="class-card" data-pickclass="${id}"><div class="class-em" style="background:linear-gradient(160deg,${pal.p},${pal.s})">${c.emoji}</div><div class="class-info"><div class="class-n">${c.name}</div><div class="class-d">${c.desc}</div></div><div class="lgo">›</div></div>`;}).join('');modal.innerHTML=`<div class="modal-top"><button class="icon-btn" data-close>←</button><div class="mt-title">Choisis ta classe</div></div><div class="modal-body"><p class="muted-note" style="margin-top:0">Ce choix est <b>définitif</b> et débloque un arbre d'armes unique. Tu reçois ta première arme gratuitement.</p><div class="class-list">${cards}</div></div>`;showModal();}
@@ -732,10 +783,18 @@ function renderDay(){ensureDay();$('#questBox').innerHTML=renderQuests();let h='
 /* ---------- render: evo ---------- */
 function renderPrayerSetup(){const box=$('#prayerSetup');const set=state.prayerTimes&&state.prayerTimes.day===todayKey();if(set){const T=state.prayerTimes.times;box.innerHTML=`<div class="pdesc">Après l’heure de chaque prière, tu as <b>1h pour la valider</b>, sinon c’est « trop tard ». Actualisé chaque jour selon ta position.</div><div class="ptimes">${PRAYER_IDS.map(p=>`<span class="ptime"><b>${p[0].toUpperCase()+p.slice(1)}</b> ${T[p]}</span>`).join('')}</div><div class="prow"><button class="btn ghost" id="prayerAuto">📍 Actualiser</button><button class="btn ghost" id="prayerClear">Désactiver</button></div>`;}else{box.innerHTML=`<div class="pdesc">Active un <b>chrono de prière</b> : à partir de l’heure de chaque prière tu as 1h pour la valider. Sans ça, tu peux valider à tout moment.</div><div class="prow"><button class="btn" id="prayerAuto">📍 Utiliser ma position</button><button class="btn ghost" id="prayerManual">✎ Saisir à la main</button></div><div class="pt-form" id="ptForm">${PRAYER_IDS.map(p=>`<label>${p[0].toUpperCase()+p.slice(1)}<input type="time" id="pf-${p}"></label>`).join('')}<button class="btn" id="ptSave">Enregistrer mes horaires</button></div>`;}}
 function gearRow(it,stats,hl){const owned=state.owned.includes(it.id);const eq=state.gear.weapon===it.id||state.gear.armor===it.id;const ic=it.type?`<svg viewBox="-22 -34 44 74" style="width:100%;height:100%"><g transform="translate(0,8)">${weaponSVG(it.type,it.mat)}</g></svg>`:'🛡️';let btn;if(eq)btn='<button class="gbtn on" disabled>Équipé ✓</button>';else if(owned)btn=`<button class="gbtn" data-equip="${it.id}">Équiper</button>`;else if(hl<(it.req||0))btn=`<button class="gbtn lock" disabled>🔒 Nv ${it.req}</button>`;else if(state.gold>=priceOf(it))btn=`<button class="gbtn buy" data-buygear="${it.id}">🪙 ${nf.format(priceOf(it))}</button>`;else btn=`<button class="gbtn lock" disabled>🪙 ${nf.format(priceOf(it))}</button>`;return`<div class="gear ${eq?'eq':''}"><div class="gic"${it.type?'':' style="background:var(--surface-2)"'}>${ic}</div><div class="gmain"><div class="gn">${it.name}</div><div class="gs">${stats}</div></div>${btn}</div>`;}
+function weaponRow(w,hl){const owned=state.owned.includes(w.id);const eq=state.gear.weapon===w.id;const l=wlvl(w.id);const ic=`<svg viewBox="-22 -34 44 74" style="width:100%;height:100%"><g transform="translate(0,8)">${weaponSVG(w.type,w.mat)}</g></svg>`;const eff=effectDesc(w);
+  const main=`<div class="gn">${w.name}${l>0?` <span class="wlv">+${l}</span>`:''}</div><div class="gs">🗡️ ${weaponAtk(w)}${w.crit?(' · ✦+'+w.crit+'%'):''}</div>${eff?`<div class="geff">${eff}</div>`:''}`;
+  let btns;
+  if(!owned){let b;if(hl<(w.req||0))b=`<button class="gbtn lock" disabled>🔒 Nv ${w.req}</button>`;else if(state.gold>=priceOf(w))b=`<button class="gbtn buy" data-buygear="${w.id}">🪙 ${nf.format(priceOf(w))}</button>`;else b=`<button class="gbtn lock" disabled>🪙 ${nf.format(priceOf(w))}</button>`;btns=b;}
+  else{const eqb=eq?'<button class="gbtn on" disabled>Équipé ✓</button>':`<button class="gbtn" data-equip="${w.id}">Équiper</button>`;let upg;if(l>=MAX_WLV)upg='<button class="gbtn lock" disabled>Max</button>';else if(state.gold>=upgCost(w))upg=`<button class="gbtn up" data-upg="${w.id}">⬆️ ${nf.format(upgCost(w))}</button>`;else upg=`<button class="gbtn lock" disabled>⬆️ ${nf.format(upgCost(w))}</button>`;btns=`<div class="gbtns">${eqb}${upg}</div>`;}
+  return `<div class="gear ${eq?'eq':''}"><div class="gic">${ic}</div><div class="gmain">${main}</div>${btns}</div>`;}
+function voieRow(emoji,name,lvl,pct,stat){return `<div class="voie"><span class="voie-e">${emoji}</span><div class="voie-m"><div class="voie-top"><b>${name}</b><span class="voie-lvl">${lvl}</span></div><div class="voie-bar"><i style="width:${(pct*100).toFixed(0)}%"></i></div></div><span class="voie-stat">${stat}</span></div>`;}
+function renderVoies(){let h='<div class="voies-card"><div class="voies-h">📊 Tes voies — ta vraie vie = ta puissance</div>';for(const c of state.cats){if(c.type==='money'){const rk=rankFor(state.euros,c.ranks);const span=rk.nextAt!=null?(rk.nextAt-rk.prevAt):1;const pct=rk.nextAt!=null?Math.max(0,Math.min(1,(state.euros-rk.prevAt)/span)):1;h+=voieRow(c.emoji,c.name,rk.name,pct,'🛡️ DEF');}else{const li=levelFromXp(catXp(c.id));const stat=c.id==='ame'?'⚔️ ATK':(c.id==='esprit'?'✦ CRIT':(c.id==='langues'?'⚔️ ATK':'✦'));h+=voieRow(c.emoji,c.name,'Niv '+li.level,li.pct,stat);}}h+=`<button class="voies-foot" data-goto-day>⚔️ Héros niveau <b>${heroLevel()}</b> — monte tes voies dans <b>Journée</b> ›</button></div>`;return h;}
 function renderShop(){const hl=heroLevel();const k=klass();const kp=CLASS_PAL[state.klass];let h='';
   h+=`<div class="sec-label">Classe</div><div class="gear"><div class="gic" style="background:linear-gradient(160deg,${kp.p},${kp.s});color:#fff">${k.emoji}</div><div class="gmain"><div class="gn">${k.name}</div><div class="gs">${k.desc}</div></div>${state.klass==='novice'?(hl>=CLASS_UNLOCK_LEVEL?'<button class="gbtn buy" id="chooseClassBtn2">Choisir</button>':`<button class="gbtn lock" disabled>🔒 Nv ${CLASS_UNLOCK_LEVEL}</button>`):''}</div>`;
   h+=`<div class="sec-label">🗡️ Armes${state.klass!=='novice'?' · voie du '+k.name:''}</div><div class="gear-list">`;
-  for(const w of WEAPONS.filter(w=>w.cls==='novice'||w.cls===state.klass))h+=gearRow(w,'🗡️ +'+w.atk+(w.crit?(' · ✦ +'+w.crit+'%'):''),hl);
+  for(const w of WEAPONS.filter(w=>w.cls==='novice'||w.cls===state.klass))h+=weaponRow(w,hl);
   h+='</div>';if(state.klass==='novice')h+=`<p class="muted-note">Choisis ta classe (niveau ${CLASS_UNLOCK_LEVEL}) pour débloquer un arbre d'armes de fou.</p>`;
   h+=`<div class="sec-label">🛡️ Armures</div><div class="gear-list">`;
   for(const a of ARMORS)h+=gearRow(a,'❤️ +'+a.pv+' · 🛡️ +'+a.def,hl);
@@ -795,8 +854,9 @@ $('#editToggle').addEventListener('click',()=>{const v=$('#view-day');v.classLis
 $('#ntAdd').addEventListener('click',()=>{const name=$('#ntName').value.trim();const pts=parseInt($('#ntPts').value)||10;const cat=$('#ntCat').value;if(!name)return;state.tasks.push({id:'t'+(state.seq++),cat,name,pts:Math.max(1,Math.min(999,pts)),type:'check'});save();$('#ntName').value='';renderDay();beep(700,.1);});
 $('#addCatBtn').addEventListener('click',()=>$('#addCatForm').classList.toggle('hidden'));
 $('#ncAdd').addEventListener('click',()=>{const name=$('#ncName').value.trim();if(!name)return;const emoji=$('#ncEmoji').value.trim()||'⭐';const color=$('#ncColor').value;const id='c'+(state.seq++);state.cats.push({id,name,emoji,color,type:'xp'});state.xp[id]=0;save();$('#ncName').value='';$('#ncEmoji').value='';$('#addCatForm').classList.add('hidden');renderAll();toast(emoji+' Catégorie « '+name+' » créée');});
-$('#view-arene').addEventListener('click',e=>{if(e.target.closest('#attackBtn')){attack();return;}if(e.target.closest('#autoBtn')){toggleAuto();return;}if(e.target.closest('#chooseClassBtn')){openClassModal();return;}});
-$('#shopMain').addEventListener('click',e=>{const bg=e.target.closest('[data-buygear]');if(bg){buyGear(bg.getAttribute('data-buygear'));return;}const eq=e.target.closest('[data-equip]');if(eq){equipGear(eq.getAttribute('data-equip'));return;}const sk=e.target.closest('[data-skin]');if(sk){equipSkin(sk.getAttribute('data-skin'));return;}if(e.target.closest('#chooseClassBtn2')){openClassModal();return;}if(e.target.closest('#buyBoost')){buyBoost();return;}});
+function gotoTab(tab){const btn=document.querySelector('.tab[data-tab="'+tab+'"]');if(btn)btn.click();}
+$('#view-arene').addEventListener('click',e=>{if(e.target.closest('#attackBtn')){attack();return;}if(e.target.closest('#autoBtn')){toggleAuto();return;}if(e.target.closest('#chooseClassBtn')){openClassModal();return;}if(e.target.closest('[data-goto-day]')){gotoTab('day');return;}});
+$('#shopMain').addEventListener('click',e=>{const bg=e.target.closest('[data-buygear]');if(bg){buyGear(bg.getAttribute('data-buygear'));return;}const up=e.target.closest('[data-upg]');if(up){upgWeapon(up.getAttribute('data-upg'));return;}const eq=e.target.closest('[data-equip]');if(eq){equipGear(eq.getAttribute('data-equip'));return;}const sk=e.target.closest('[data-skin]');if(sk){equipSkin(sk.getAttribute('data-skin'));return;}if(e.target.closest('#chooseClassBtn2')){openClassModal();return;}if(e.target.closest('#buyBoost')){buyBoost();return;}});
 $('#prayerSetup').addEventListener('click',e=>{if(e.target.closest('#prayerAuto')){setupPrayerAuto();return;}if(e.target.closest('#prayerManual')){$('#ptForm').classList.toggle('show');return;}if(e.target.closest('#prayerClear')){state.prayerTimes=null;state.geo=null;save();renderPrayerSetup();renderDay();toast('Chrono de prière désactivé');return;}if(e.target.closest('#ptSave')){const T={};let ok=true;for(const p of PRAYER_IDS){const val=$('#pf-'+p).value;if(!val){ok=false;break;}T[p]=val;}if(!ok){toast('Remplis les 5 horaires');return;}state.prayerTimes={day:todayKey(),times:T};save();renderPrayerSetup();renderDay();toast('⏱ Horaires enregistrés');}});
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');const tab=t.getAttribute('data-tab');$('#view-arene').classList.toggle('hidden',tab!=='arene');$('#view-day').classList.toggle('hidden',tab!=='day');$('#view-shop').classList.toggle('hidden',tab!=='shop');if(tab!=='arene')stopAuto();if(tab==='arene')renderArena();if(tab==='day')renderDay();if(tab==='shop')renderShop();scrollTo({top:0,behavior:'smooth'});}));
 function setTheme(t){state.theme=t;document.documentElement.setAttribute('data-theme',t);$('#themeBtn').textContent=t==='dark'?'☀️':'🌙';const m=document.querySelector('meta[name=theme-color]');if(m)m.content=(t==='dark'?'#0E0D18':'#F5F4FA');save();}
