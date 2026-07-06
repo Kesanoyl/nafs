@@ -253,6 +253,13 @@
   .voie-stat{font-size:10.5px;font-weight:800;color:var(--muted);flex:none;background:var(--surface-2);padding:3px 7px;border-radius:7px}
   .voie-skin{font-size:10px;font-weight:700;color:var(--muted);margin-top:3px}.vs-on{color:#E0A93B;font-weight:800}
   .skin-group{font-size:12px;font-weight:800;margin:14px 4px 8px;display:flex;align-items:center;gap:8px}.skin-count{font-size:11px;color:var(--muted);font-weight:700}
+  .gem-info{font-size:12px;color:var(--muted);font-weight:600;line-height:1.5;background:var(--surface-2);border-radius:12px;padding:11px 13px;margin-bottom:11px}.gem-info b{color:var(--text)}
+  .sockets{display:flex;gap:9px;margin-bottom:4px}
+  .socket{flex:1;min-height:70px;border-radius:14px;border:1.5px dashed var(--border);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;padding:8px 4px;font-size:11px;font-weight:800;color:var(--faint)}
+  .socket.empty{color:var(--faint)}.socket.empty span{font-size:10px;font-weight:700}
+  .socket.lock{opacity:.7}.socket.lock span{font-size:9.5px;color:var(--muted);margin-top:2px}
+  .socket.filled{border-style:solid;border-color:var(--gc);box-shadow:0 0 0 1px var(--gc) inset,var(--shadow-sm);cursor:pointer;background:color-mix(in srgb,var(--gc) 12%,var(--surface))}
+  .socket.filled .sock-em{font-size:24px}.socket .sock-d{font-size:10px;font-weight:800;color:var(--text);line-height:1.1}.socket .sock-x{font-size:9px;color:var(--danger);font-weight:800}
   .voies-foot{width:100%;margin-top:10px;border:none;background:var(--accent-soft);color:var(--accent);border-radius:11px;padding:9px;font-size:12px;font-weight:800;cursor:pointer}
   .geff{font-size:11px;font-weight:800;color:var(--c-esprit);margin-top:3px}
   .wlv{font-size:11px;font-weight:900;color:var(--good);background:color-mix(in srgb,var(--good) 15%,transparent);padding:0 6px;border-radius:6px;vertical-align:middle}
@@ -646,7 +653,7 @@ const defaultState=()=>({cats:JSON.parse(JSON.stringify(DEFAULT_CATS)),tasks:JSO
   xp:{ame:0,esprit:0,langues:0},euros:0,day:todayKey(),done:{},daily:freshDaily(),streak:0,streakDay:null,
   baraka:0,boostDay:null,geo:null,prayerTimes:null,
   floor:1,floorMax:1,gold:0,klass:'novice',skin:'base',gear:{weapon:'w_stick',armor:'ar0'},owned:['w_stick','ar0'],wlv:{},
-  life:{dhikr:0,verses:0,quiz:0,kills:0,pages:0},eng:{tested:false,level:1,queue:[]},
+  life:{dhikr:0,verses:0,quiz:0,kills:0,pages:0},eng:{tested:false,level:1,queue:[]},gems:{},sockets:[null,null,null],
   theme:null,muted:false,seq:1});
 let state=load();
 migrateContent();migrateCombat();
@@ -656,6 +663,7 @@ function migrateCombat(){
   if(!state.life)state.life={dhikr:0,verses:0,quiz:0,kills:0,pages:0};
   if(!state.wlv||typeof state.wlv!=='object')state.wlv={};
   if(!state.eng||typeof state.eng!=='object')state.eng={tested:false,level:1,queue:[]};if(!Array.isArray(state.eng.queue))state.eng.queue=[];
+  if(!state.gems||typeof state.gems!=='object')state.gems={};if(!Array.isArray(state.sockets))state.sockets=[null,null,null];
   if(state.floorMax==null)state.floorMax=state.floor||1;
   if(!state.gear||!WEAPONS.find(w=>w.id===state.gear.weapon))state.gear={weapon:'w_stick',armor:'ar0'};
   if(!ARMORS.find(a=>a.id===state.gear.armor))state.gear.armor='ar0';
@@ -693,12 +701,32 @@ function klass(){return CLASSES[state.klass]||CLASSES.novice;}
 function gearStats(){const s={atk:0,pv:0,def:0,crit:0};const w=equippedWeapon(),a=equippedArmor();s.atk+=weaponAtk(w);s.crit+=w.crit||0;s.pv+=armorPv(a);s.def+=armorDef(a);return s;}
 function heroLevel(){const a=catLevel('ame'),e=catLevel('esprit'),l=(state.xp['langues']!=null?catLevel('langues'):0);const rc=state.cats.find(c=>c.type==='money');const ri=rc?rankFor(state.euros,rc.ranks).cur:0;return a+e+l+ri;}
 function rankIdx(){const rc=state.cats.find(c=>c.type==='money');return rc?rankFor(state.euros,rc.ranks).cur:0;}
-function heroStats(){const g=gearStats(),k=klass();const a=catLevel('ame'),e=catLevel('esprit'),l=(state.xp['langues']!=null?catLevel('langues'):0);const rc=state.cats.find(c=>c.type==='money');const ri=rc?rankFor(state.euros,rc.ranks).cur:0;
+/* ---- gemmes (loot) ---- */
+const GEM_TYPES={
+  atk:{name:'Rubis',emoji:'🔴',col:'#E0475C',stat:'atk',base:6,unit:'',label:'ATK'},
+  crit:{name:'Saphir',emoji:'🔵',col:'#2D8CFF',stat:'crit',base:2,unit:'%',label:'Crit'},
+  pv:{name:'Grenat',emoji:'💗',col:'#E86FB0',stat:'pv',base:25,unit:'',label:'PV'},
+  def:{name:'Améthyste',emoji:'🟣',col:'#9b7bff',stat:'def',base:2,unit:'',label:'DEF'},
+  life:{name:'Émeraude',emoji:'🟢',col:'#2fbf6b',stat:'life',base:3,unit:'%',label:'Vol de vie'},
+  gold:{name:'Topaze',emoji:'🟡',col:'#E0A93B',stat:'gold',base:4,unit:'%',label:'Or trouvé'},
+  burn:{name:'Ambre',emoji:'🟠',col:'#ff6a2c',stat:'burn',base:5,unit:'%',label:'Brûlure'},
+};
+const GEM_TIER=['Brut','Taillé','Pur'];
+const GEM_MULT=[1,2,3.5];
+function gemVal(type,tier){return Math.round(GEM_TYPES[type].base*GEM_MULT[tier-1]);}
+function gemKey(type,tier){return type+'_'+tier;}
+function parseGem(k){const p=k.split('_');return{type:p[0],tier:+p[1]};}
+function gemName(type,tier){return GEM_TYPES[type].name+' '+GEM_TIER[tier-1];}
+function gemDesc(type,tier){const g=GEM_TYPES[type];return'+'+gemVal(type,tier)+g.unit+' '+g.label;}
+function socketCount(){const l=heroLevel();return 1+(l>=12?1:0)+(l>=25?1:0);}
+function gemBonus(){const b={atk:0,crit:0,pv:0,def:0,life:0,gold:0,burn:0};if(!state.sockets)return b;const n=socketCount();for(let i=0;i<n;i++){const k=state.sockets[i];if(!k)continue;const g=parseGem(k);if(GEM_TYPES[g.type])b[GEM_TYPES[g.type].stat]+=gemVal(g.type,g.tier);}return b;}
+function rollGemDrop(boss){const chance=boss?0.5:0.06;if(Math.random()>=chance)return null;const types=Object.keys(GEM_TYPES);const type=types[Math.floor(Math.random()*types.length)];const r=Math.random();let tier;if(boss)tier=r<0.4?1:(r<0.8?2:3);else tier=r<0.75?1:(r<0.95?2:3);return{type,tier};}
+function heroStats(){const g=gearStats(),k=klass(),gb=gemBonus();const a=catLevel('ame'),e=catLevel('esprit'),l=(state.xp['langues']!=null?catLevel('langues'):0);const rc=state.cats.find(c=>c.type==='money');const ri=rc?rankFor(state.euros,rc.ranks).cur:0;
   const lvl=a+e+l+ri;
-  const atk=Math.round((10+l*5+a*3+g.atk)*(k.atkMul||1));/* Langues → ATK */
-  const pvmax=Math.round((90+a*18+(e+l)*8+g.pv)*(k.pvMul||1));/* Âme/Foi → PV */
-  const crit=Math.min(70,5+ri*4+Math.floor(lvl/3)+g.crit+(k.crit||0));/* Richesse → CRIT (+ bonus niveau global) */
-  const def=e*3+g.def+(k.def||0);/* Esprit → DEF */
+  const atk=Math.round((10+l*5+a*3+g.atk+gb.atk)*(k.atkMul||1));/* Langues → ATK */
+  const pvmax=Math.round((90+a*18+(e+l)*8+g.pv+gb.pv)*(k.pvMul||1));/* Âme/Foi → PV */
+  const crit=Math.min(70,5+ri*4+Math.floor(lvl/3)+g.crit+gb.crit+(k.crit||0));/* Richesse → CRIT */
+  const def=e*3+g.def+gb.def+(k.def||0);/* Esprit → DEF */
   return{atk,pvmax,crit,def,level:lvl};}
 function skinUnlocked(s){try{return s.cond();}catch(e){return false;}}
 function heroPalette(){const sk=SKINS.find(s=>s.id===state.skin);if(sk&&sk.pal)return sk.pal;return CLASS_PAL[state.klass]||CLASS_PAL.novice;}
@@ -806,7 +834,7 @@ function updateBattleUI(){const hs=heroStats(),mob=mobAt(state.floor);const hi=d
 function animateAttack(who){const el=$(who==='hero'?'#heroBody':'#mobBody');if(el){const cls=who==='hero'?'lunge-r':'lunge-l';el.classList.add(cls);setTimeout(()=>el.classList.remove(cls),160);}const foe=$(who==='hero'?'#mobBody':'#heroBody');if(foe){foe.classList.add('hit');setTimeout(()=>foe.classList.remove('hit'),300);}}
 function hitFx(){const w=equippedWeapon();const col=WFX[w.id]?FXCOL[WFX[w.id]]:'#ffffff';const f=$('.fighter.mob');if(!f)return;const d=document.createElement('div');d.className='hitfx';d.style.setProperty('--fx',col);f.appendChild(d);setTimeout(()=>d.remove(),400);}
 function floatDmg(who,text,crit,positive,pre){const f=$(who==='hero'?'.fighter.hero':'.fighter.mob');if(!f)return;const d=document.createElement('div');d.className='dmg'+(crit?' crit':'');d.textContent=(pre?pre+' ':'')+(typeof text==='number'?('-'+text):text);d.style.color=positive?'#39D39B':(who==='hero'?'#FF6B7A':(crit?'#FFD36B':'#fff'));d.style.left=(38+Math.random()*24)+'%';f.appendChild(d);setTimeout(()=>d.remove(),820);}
-function attack(){ensureBattle();if(CB.busy)return;const hs=heroStats(),mob=mobAt(state.floor),w=equippedWeapon(),fx=WFX[w.id],l=wlvl(w.id);
+function attack(){ensureBattle();if(CB.busy)return;const hs=heroStats(),mob=mobAt(state.floor),w=equippedWeapon(),fx=WFX[w.id],l=wlvl(w.id),gb=gemBonus();
   // 1) DoT (brûlure/poison) en début de tour
   if(CB.dot&&CB.dot.turns>0){CB.mobHP-=CB.dot.dmg;floatDmg('mob',CB.dot.dmg,false,false,CB.dot.emoji);CB.dot.turns--;beep(360,.05,'sine',.06);if(CB.mobHP<=0){CB.mobHP=0;updateBattleUI();victory(mob);return;}}
   // 2) coup du héros + effets à l'impact
@@ -818,16 +846,18 @@ function attack(){ensureBattle();if(CB.busy)return;const hs=heroStats(),mob=mobA
   if(fx==='arcane'&&Math.random()*100<Math.min(50,15+l*3)){dmg+=hs.atk*0.8;note='🔮';}
   dmg=Math.max(1,Math.round(dmg));CB.mobHP-=dmg;animateAttack('hero');hitFx();floatDmg('mob',dmg,crit,false,note);beep(crit?720:520,.06,'square',.07);vibrate(crit?24:9);
   // vol de vie
-  if(fx==='soul'||fx==='cosmic'){const heal=Math.round(dmg*(fx==='cosmic'?0.15:(10+l*3)/100));if(heal>0){CB.hp=Math.min(hs.pvmax,CB.hp+heal);floatDmg('hero',heal,false,true,'🟢');}}
-  // pose de DoT
-  if((fx==='fire'||fx==='cosmic')&&Math.random()*100<Math.min(60,18+l*4))CB.dot={emoji:'🔥',turns:2,dmg:Math.round(hs.atk*0.35)};
+  const lifePct=(fx==='cosmic'?15:(fx==='soul'?(10+l*3):0))+gb.life;
+  if(lifePct>0){const heal=Math.round(dmg*lifePct/100);if(heal>0){CB.hp=Math.min(hs.pvmax,CB.hp+heal);floatDmg('hero',heal,false,true,'🟢');}}
+  // pose de DoT (brûlure : arme feu/cosmos OU gemme d'ambre)
+  const burnCh=((fx==='fire'||fx==='cosmic')?Math.min(60,18+l*4):0)+gb.burn;
+  if(burnCh>0&&Math.random()*100<Math.min(85,burnCh))CB.dot={emoji:'🔥',turns:2,dmg:Math.round(hs.atk*0.35)};
   else if(fx==='venom'&&Math.random()*100<Math.min(70,22+l*4))CB.dot={emoji:'☠️',turns:3,dmg:Math.round(hs.atk*0.2)};
   if(CB.mobHP<=0){CB.mobHP=0;updateBattleUI();victory(mob);return;}
   // gel : le mob rate son tour
   let frozen=false;if(fx==='frost'&&Math.random()*100<Math.min(45,10+l*3)){frozen=true;floatDmg('mob','❄️ gelé',false,false);}
   if(!frozen){const mdmg=Math.max(1,Math.round(mob.atk*(50/(50+hs.def))*(0.85+Math.random()*0.3)));CB.hp-=mdmg;setTimeout(()=>{animateAttack('mob');floatDmg('hero',mdmg,false,false);},150);if(CB.hp<=0){CB.hp=0;updateBattleUI();setTimeout(defeat,320);return;}}
   updateBattleUI();}
-function victory(mob){CB.busy=true;state.gold+=mob.gold;ensureDay();state.daily.kills=(state.daily.kills||0)+1;life().kills++;const mb=$('#mobBody');if(mb)mb.classList.add('dead');floatDmg('mob','+'+mob.gold+' 🪙',true,true);beep(880,.18,'triangle',.14);burst(mob.boss?90:28);updateBaraka();save();setTimeout(()=>{state.floor++;if(state.floor>state.floorMax)state.floorMax=state.floor;CB=null;save();renderArena();toast(mob.boss?('👑 Boss vaincu ! +'+mob.gold+' or'):('Vaincu ! +'+mob.gold+' or'));},520);}
+function victory(mob){CB.busy=true;const gold=Math.round(mob.gold*(1+gemBonus().gold/100));state.gold+=gold;ensureDay();state.daily.kills=(state.daily.kills||0)+1;life().kills++;const mb=$('#mobBody');if(mb)mb.classList.add('dead');floatDmg('mob','+'+gold+' 🪙',true,true);beep(880,.18,'triangle',.14);burst(mob.boss?90:28);const drop=rollGemDrop(mob.boss);if(drop){const k=gemKey(drop.type,drop.tier);state.gems[k]=(state.gems[k]||0)+1;setTimeout(()=>{floatDmg('mob','💎',true,true);toast('💎 Gemme trouvée : '+gemName(drop.type,drop.tier)+' ! (Boutique → Gemmes)');beep(1046,.25,'triangle',.16);burst(50);},260);}updateBaraka();save();setTimeout(()=>{state.floor++;if(state.floor>state.floorMax)state.floorMax=state.floor;CB=null;save();renderArena();toast(mob.boss?('👑 Boss vaincu ! +'+gold+' or'):('Vaincu ! +'+gold+' or'));},520);}
 function defeat(){CB.busy=true;stopAuto();const hb=$('#heroBody');if(hb)hb.classList.add('flash');beep(200,.3,'sawtooth',.1);const hs=heroStats(),mob=mobAt(state.floor);setTimeout(()=>{CB={floor:state.floor,hp:hs.pvmax,mobHP:mob.hp,busy:false};renderArena();toast('💀 Vaincu ! Renforce-toi : prières, quiz, ou meilleur équipement.');},650);}
 function toggleAuto(){if(autoTimer){stopAuto();}else{autoTimer=setInterval(()=>{if($('#view-arene').classList.contains('hidden')){return;}if(CB&&CB.busy)return;attack();},620);}renderArena();}
 function stopAuto(){if(autoTimer){clearInterval(autoTimer);autoTimer=null;}}
@@ -839,6 +869,8 @@ function upgWeapon(id){const w=WEAPONS.find(x=>x.id===id);if(!w||!state.owned.in
 function chooseClass(id){if(!CLASSES[id]||state.klass!=='novice')return;state.klass=id;const first=WEAPONS.find(w=>w.cls===id);if(first){if(!state.owned.includes(first.id))state.owned.push(first.id);state.gear.weapon=first.id;}CB=null;save();hideModal();renderArena();renderShop();burst(70);beep(1000,.25,'triangle',.16);toast(CLASSES[id].emoji+' Tu es désormais '+CLASSES[id].name+' !');}
 function equipSkin(id){const s=SKINS.find(x=>x.id===id);if(!s||!skinUnlocked(s))return;state.skin=id;CB=null;save();renderShop();renderArena();burst(40);beep(880,.16,'triangle',.15);toast('✨ Skin équipé : '+s.name);}
 function openClassModal(){const cards=Object.keys(CLASSES).filter(id=>id!=='novice').map(id=>{const c=CLASSES[id];const pal=CLASS_PAL[id];return`<div class="class-card" data-pickclass="${id}"><div class="class-em" style="background:linear-gradient(160deg,${pal.p},${pal.s})">${c.emoji}</div><div class="class-info"><div class="class-n">${c.name}</div><div class="class-d">${c.desc}</div></div><div class="lgo">›</div></div>`;}).join('');modal.innerHTML=`<div class="modal-top"><button class="icon-btn" data-close>←</button><div class="mt-title">Choisis ta classe</div></div><div class="modal-body"><p class="muted-note" style="margin-top:0">Ce choix est <b>définitif</b> et débloque un arbre d'armes unique. Tu reçois ta première arme gratuitement.</p><div class="class-list">${cards}</div></div>`;showModal();}
+function slotGem(k){if(!state.gems[k])return;const n=socketCount();let slot=-1;for(let i=0;i<n;i++)if(!state.sockets[i]){slot=i;break;}if(slot<0){toast('Sertissures pleines — retire une gemme d’abord');return;}state.sockets[slot]=k;state.gems[k]--;if(state.gems[k]<=0)delete state.gems[k];CB=null;save();renderShop();renderArena();burst(30);beep(900,.16,'triangle',.15);vibrate(24);toast('💎 Gemme sertie !');}
+function unslotGem(i){const k=state.sockets[i];if(!k)return;state.sockets[i]=null;state.gems[k]=(state.gems[k]||0)+1;CB=null;save();renderShop();renderArena();beep(500,.1);toast('Gemme retirée');}
 function buyBoost(){if(state.gold<BOOST_COST)return;state.gold-=BOOST_COST;state.boostDay=todayKey();save();updateBaraka();renderShop();renderArena();burst(40);beep(1000,.2,'triangle',.16);toast('⚡ Journée bénie activée — points ×2 !');}
 
 /* ---------- render: day ---------- */
@@ -869,6 +901,13 @@ function renderShop(){const hl=heroLevel();const k=klass();const kp=CLASS_PAL[st
   h+=`<div class="sec-label">✨ Skins — débloque-les en montant tes voies</div>`;
   h+='<div class="gear-list">'+skinCard(SKINS.find(s=>s.id==='base'))+'</div>';
   for(const [key,label] of [['ame','🕌 Foi'],['esprit','🧠 Esprit'],['langues','🗣️ Langues'],['richesse','💰 Richesse'],['combat','⚔️ Combat']]){const list=SKINS.filter(s=>s.voie===key);if(!list.length)continue;const nb=list.filter(skinUnlocked).length;h+=`<div class="skin-group">${label} <span class="skin-count">${nb}/${list.length}</span></div><div class="gear-list">`+list.map(skinCard).join('')+'</div>';}
+  h+=`<div class="sec-label">💎 Gemmes (loot)</div><div class="gem-info">Les gemmes tombent <b>rarement</b> en tuant des mobs (les boss en lâchent bien plus). Sertis-les sur ton héros pour des <b>bonus légers</b> — ta vraie puissance vient toujours de tes voies.</div>`;
+  const nsock=socketCount();h+='<div class="sockets">';
+  for(let i=0;i<3;i++){const un=i<nsock;const k=state.sockets[i];if(!un)h+=`<div class="socket lock">🔒<span>niv ${i===1?12:25}</span></div>`;else if(k){const gg=parseGem(k);h+=`<div class="socket filled" data-unslot="${i}" style="--gc:${GEM_TYPES[gg.type].col}"><div class="sock-em">${GEM_TYPES[gg.type].emoji}</div><div class="sock-d">${gemDesc(gg.type,gg.tier)}</div><div class="sock-x">retirer ✕</div></div>`;}else h+=`<div class="socket empty">＋<span>vide</span></div>`;}
+  h+='</div>';
+  const bag=Object.keys(state.gems||{}).filter(k=>state.gems[k]>0);
+  if(bag.length){h+='<div class="skin-group">Ton sac</div><div class="gear-list">';for(const k of bag){const gg=parseGem(k);h+=`<div class="gear"><div class="gic" style="background:${GEM_TYPES[gg.type].col};color:#fff">${GEM_TYPES[gg.type].emoji}</div><div class="gmain"><div class="gn">${gemName(gg.type,gg.tier)} <span class="rar">×${state.gems[k]}</span></div><div class="gs">${gemDesc(gg.type,gg.tier)}</div></div><button class="gbtn buy" data-slotgem="${k}">Sertir</button></div>`;}h+='</div>';}
+  else h+='<p class="muted-note">Aucune gemme pour l’instant — bats des mobs pour en trouver 💎 (c’est rare !)</p>';
   const ba=boostActive();h+=`<div class="sec-label">⚡ Bonus</div><div class="boost"><div class="bi">⚡</div><div class="bm"><div class="bn">Journée bénie ×2</div><div class="bd">${ba?'Actif — points doublés aujourd’hui':'Double les points (et l’or) gagnés aujourd’hui.'}</div></div>${ba?'<span class="qdone">✓ actif</span>':`<button class="btn ${state.gold>=BOOST_COST?'gold':'ghost'}" id="buyBoost" ${state.gold<BOOST_COST?'disabled':''}>🪙${BOOST_COST}</button>`}</div>`;
   $('#shopMain').innerHTML=h;renderPrayerSetup();updateBaraka();}
 function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
@@ -934,7 +973,7 @@ $('#addCatBtn').addEventListener('click',()=>$('#addCatForm').classList.toggle('
 $('#ncAdd').addEventListener('click',()=>{const name=$('#ncName').value.trim();if(!name)return;const emoji=$('#ncEmoji').value.trim()||'⭐';const color=$('#ncColor').value;const id='c'+(state.seq++);state.cats.push({id,name,emoji,color,type:'xp'});state.xp[id]=0;save();$('#ncName').value='';$('#ncEmoji').value='';$('#addCatForm').classList.add('hidden');renderAll();toast(emoji+' Catégorie « '+name+' » créée');});
 function gotoTab(tab){const btn=document.querySelector('.tab[data-tab="'+tab+'"]');if(btn)btn.click();}
 $('#view-arene').addEventListener('click',e=>{if(e.target.closest('#attackBtn')){attack();return;}if(e.target.closest('#autoBtn')){toggleAuto();return;}if(e.target.closest('#chooseClassBtn')){openClassModal();return;}if(e.target.closest('[data-goto-day]')){gotoTab('day');return;}});
-$('#shopMain').addEventListener('click',e=>{const bg=e.target.closest('[data-buygear]');if(bg){buyGear(bg.getAttribute('data-buygear'));return;}const up=e.target.closest('[data-upg]');if(up){upgWeapon(up.getAttribute('data-upg'));return;}const eq=e.target.closest('[data-equip]');if(eq){equipGear(eq.getAttribute('data-equip'));return;}const sk=e.target.closest('[data-skin]');if(sk){equipSkin(sk.getAttribute('data-skin'));return;}if(e.target.closest('#chooseClassBtn2')){openClassModal();return;}if(e.target.closest('#buyBoost')){buyBoost();return;}});
+$('#shopMain').addEventListener('click',e=>{const bg=e.target.closest('[data-buygear]');if(bg){buyGear(bg.getAttribute('data-buygear'));return;}const up=e.target.closest('[data-upg]');if(up){upgWeapon(up.getAttribute('data-upg'));return;}const eq=e.target.closest('[data-equip]');if(eq){equipGear(eq.getAttribute('data-equip'));return;}const sk=e.target.closest('[data-skin]');if(sk){equipSkin(sk.getAttribute('data-skin'));return;}const sg=e.target.closest('[data-slotgem]');if(sg){slotGem(sg.getAttribute('data-slotgem'));return;}const us=e.target.closest('[data-unslot]');if(us){unslotGem(+us.getAttribute('data-unslot'));return;}if(e.target.closest('#chooseClassBtn2')){openClassModal();return;}if(e.target.closest('#buyBoost')){buyBoost();return;}});
 $('#prayerSetup').addEventListener('click',e=>{if(e.target.closest('#prayerAuto')){setupPrayerAuto();return;}if(e.target.closest('#prayerManual')){$('#ptForm').classList.toggle('show');return;}if(e.target.closest('#prayerClear')){state.prayerTimes=null;state.geo=null;save();renderPrayerSetup();renderDay();toast('Chrono de prière désactivé');return;}if(e.target.closest('#ptSave')){const T={};let ok=true;for(const p of PRAYER_IDS){const val=$('#pf-'+p).value;if(!val){ok=false;break;}T[p]=val;}if(!ok){toast('Remplis les 5 horaires');return;}state.prayerTimes={day:todayKey(),times:T};save();renderPrayerSetup();renderDay();toast('⏱ Horaires enregistrés');}});
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');const tab=t.getAttribute('data-tab');$('#view-arene').classList.toggle('hidden',tab!=='arene');$('#view-day').classList.toggle('hidden',tab!=='day');$('#view-shop').classList.toggle('hidden',tab!=='shop');if(tab!=='arene')stopAuto();if(tab==='arene')renderArena();if(tab==='day')renderDay();if(tab==='shop')renderShop();scrollTo({top:0,behavior:'smooth'});}));
 function setTheme(t){state.theme=t;document.documentElement.setAttribute('data-theme',t);$('#themeBtn').textContent=t==='dark'?'☀️':'🌙';const m=document.querySelector('meta[name=theme-color]');if(m)m.content=(t==='dark'?'#0E0D18':'#F5F4FA');save();}
