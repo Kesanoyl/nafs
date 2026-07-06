@@ -193,7 +193,8 @@
   .hitfx{position:absolute;top:64px;left:50%;width:74px;height:74px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,var(--fx),transparent 68%);pointer-events:none;z-index:19;animation:hitburst .4s ease-out forwards}
   @keyframes hitburst{0%{opacity:.85;transform:translate(-50%,-50%) scale(.3)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5)}}
   .arena{position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:6px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 12%,var(--surface)),var(--surface));border:1px solid var(--border);border-radius:24px;padding:20px 14px 16px;min-height:220px;box-shadow:var(--shadow);overflow:hidden}
-  .arena::after{content:"";position:absolute;left:0;right:0;bottom:0;height:34%;background:radial-gradient(70% 100% at 50% 100%,color-mix(in srgb,var(--accent) 26%,transparent),transparent);pointer-events:none}
+  .arena::after{content:"";position:absolute;left:0;right:0;bottom:0;height:44%;background:linear-gradient(0deg,rgba(0,0,0,.20),transparent 70%);pointer-events:none;z-index:0}
+  .scene{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
   .fighter{display:flex;flex-direction:column;align-items:center;gap:9px;width:42%;position:relative;z-index:1}
   .fighter .fname{font-size:11px;font-weight:800;color:var(--muted);text-align:center;line-height:1.2}
   .fbody{width:92px;height:92px;border-radius:24px;display:grid;place-items:center;font-size:50px;position:relative;transition:transform .14s cubic-bezier(.3,1.4,.5,1);will-change:transform}
@@ -201,6 +202,8 @@
   .mob .fbody{filter:drop-shadow(0 8px 10px rgba(0,0,0,.3))}
   .mob .fbody.boss{font-size:62px;animation:bossPulse 1.4s ease-in-out infinite}
   @keyframes bossPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+  .mobIdle{display:inline-block;animation:mobFloat 2.8s ease-in-out infinite;filter:drop-shadow(0 6px 6px rgba(0,0,0,.35))}
+  @keyframes mobFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
   .fbody .wep{position:absolute;bottom:-8px;right:-10px;font-size:30px;transform:rotate(14deg);filter:drop-shadow(0 2px 3px rgba(0,0,0,.4))}
   .fbody .amu{position:absolute;top:-8px;left:-8px;font-size:20px}
   .hpwrap{width:100%;max-width:150px}
@@ -210,6 +213,8 @@
   .hptext{font-size:10px;font-weight:800;color:var(--muted);text-align:center;margin-top:4px;font-variant-numeric:tabular-nums}
   .vs{align-self:center;font-size:19px;opacity:.45;z-index:1;padding-bottom:34px}
   .lunge-r{transform:translateX(24px) scale(1.06)!important}.lunge-l{transform:translateX(-24px) scale(1.06)!important}
+  .fbody.swing{animation:heroSwing .44s cubic-bezier(.3,1.15,.4,1)}
+  @keyframes heroSwing{0%{transform:translateX(0) rotate(0)}22%{transform:translateX(-12px) rotate(-7deg)}52%{transform:translateX(30px) rotate(9deg)}100%{transform:translateX(0) rotate(0)}}
   .fbody.hit{animation:hitShake .3s}
   @keyframes hitShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}60%{transform:translateX(7px)}}
   .fbody.dead{opacity:0;transform:scale(.3) rotate(35deg)!important;transition:.5s}
@@ -232,7 +237,8 @@
   .gbtn{border:none;border-radius:11px;padding:10px 13px;font-weight:800;font-size:12.5px;cursor:pointer;background:var(--surface-2);color:var(--text);flex:none;white-space:nowrap}
   .gbtn.buy{background:var(--c-richesse);color:#fff}.gbtn.on{background:var(--accent);color:#fff}.gbtn.lock{color:var(--faint);cursor:not-allowed}
   .hero .fbody.herofig{background:none!important;box-shadow:none!important;width:118px;height:150px;border-radius:0;overflow:visible}
-  .heroSvg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 6px 8px rgba(0,0,0,.28))}
+  .heroSvg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 6px 8px rgba(0,0,0,.28));transform-origin:50% 100%;animation:breathe 3.4s ease-in-out infinite}
+  @keyframes breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-3px) scale(1.015)}}
   .class-banner{width:100%;margin-bottom:12px;border:none;border-radius:14px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;background:linear-gradient(180deg,#7d63e0,#5b44d4);color:#fff;box-shadow:0 8px 18px rgba(91,68,212,.4);animation:bannerPulse 1.6s ease-in-out infinite}
   @keyframes bannerPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
   .class-hint{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;line-height:1.8}.ch-cur{color:var(--muted);font-weight:600;font-size:11.5px}
@@ -604,18 +610,55 @@ const SKINS=[
   {id:'void',name:'Chevalier du Néant',voie:'combat',rarity:'Combat',aura:{c:'#9b7bff',style:'smoke'},pal:{p:'#0a0a12',s:'#040407',t:'#b98bff',skin:'#8f86b5'},cond:()=>state.floorMax>=100,hint:'Atteins l’étage 100'},
 ];
 const WORLDS=[
-  {name:'Plaines',tint:'#5fb33b',mobs:['🐀','🐍','🐗','🦂','🕷️','🐺'],boss:{emoji:'🦁',name:'Lion Alpha'}},
-  {name:'Forêt maudite',tint:'#2e7d4f',mobs:['🕷️','🦇','🐍','🐺','🐗','🧟'],boss:{emoji:'🧟',name:'Seigneur des Bois'}},
-  {name:'Cavernes',tint:'#a08a5a',mobs:['🦇','🕷️','🦂','👺','🐍'],boss:{emoji:'👹',name:'Roi Gobelin'}},
-  {name:'Marais toxique',tint:'#7fae2f',mobs:['🐸','🐍','🦟','🐊','🕷️'],boss:{emoji:'🐊',name:'Hydre des Marais'}},
-  {name:'Enfer',tint:'#e0492c',mobs:['🔥','👿','😈','🦇','💀'],boss:{emoji:'😈',name:'Démon Majeur'}},
-  {name:'Cité en ruine',tint:'#9aa0ad',mobs:['🧟','💀','🦇','👻','🕸️'],boss:{emoji:'💀',name:'Roi Squelette'}},
-  {name:'Toundra',tint:'#5ec8ff',mobs:['❄️','🐺','🐻','🦣','🦉'],boss:{emoji:'🐻',name:'Fenrir le Blanc'}},
-  {name:'Abysses',tint:'#2d6fe0',mobs:['🦈','🐙','🌊','🐡','👁️'],boss:{emoji:'🐙',name:'Kraken'}},
-  {name:'Néant',tint:'#7d63e0',mobs:['🌑','👁️','👻','🕳️','🦇'],boss:{emoji:'👁️',name:'Œil du Néant'}},
-  {name:'Cosmos',tint:'#7c9bff',mobs:['⭐','🌟','☄️','🌠','🪐'],boss:{emoji:'☄️',name:'Dévoreur d’Étoiles'}},
+  {name:'Plaines',tint:'#5fb33b',mobs:['🐀','🐍','🐗','🦂','🕷️','🐺'],boss:{emoji:'🦁',name:'Lion Alpha'},sky:['#7ec0ee','#cfeeae'],ground:'#3d7a2a',deco:'hills'},
+  {name:'Forêt maudite',tint:'#2e7d4f',mobs:['🕷️','🦇','🐍','🐺','🐗','🧟'],boss:{emoji:'🧟',name:'Seigneur des Bois'},sky:['#1c3d2c','#2e5d3f'],ground:'#1e4d2f',deco:'forest'},
+  {name:'Cavernes',tint:'#a08a5a',mobs:['🦇','🕷️','🦂','👺','🐍'],boss:{emoji:'👹',name:'Roi Gobelin'},sky:['#2a2418','#453a24'],ground:'#4a3f2c',deco:'cave'},
+  {name:'Marais toxique',tint:'#7fae2f',mobs:['🐸','🐍','🦟','🐊','🕷️'],boss:{emoji:'🐊',name:'Hydre des Marais'},sky:['#3a4520','#5c6b2e'],ground:'#3f4a26',deco:'swamp'},
+  {name:'Enfer',tint:'#e0492c',mobs:['🔥','👿','😈','🦇','💀'],boss:{emoji:'😈',name:'Démon Majeur'},sky:['#5a1206','#b83415'],ground:'#3a1410',deco:'hell'},
+  {name:'Cité en ruine',tint:'#9aa0ad',mobs:['🧟','💀','🦇','👻','🕸️'],boss:{emoji:'💀',name:'Roi Squelette'},sky:['#6b7280','#9aa0ad'],ground:'#4a4d55',deco:'ruins'},
+  {name:'Toundra',tint:'#5ec8ff',mobs:['❄️','🐺','🐻','🦣','🦉'],boss:{emoji:'🐻',name:'Fenrir le Blanc'},sky:['#bfe0f5','#eaf6ff'],ground:'#dfeaf2',deco:'ice'},
+  {name:'Abysses',tint:'#2d6fe0',mobs:['🦈','🐙','🌊','🐡','👁️'],boss:{emoji:'🐙',name:'Kraken'},sky:['#0a2a55','#0e4a82'],ground:'#0e2b52',deco:'abyss'},
+  {name:'Néant',tint:'#7d63e0',mobs:['🌑','👁️','👻','🕳️','🦇'],boss:{emoji:'👁️',name:'Œil du Néant'},sky:['#241a3a','#0e0a1a'],ground:'#16121f',deco:'void'},
+  {name:'Cosmos',tint:'#7c9bff',mobs:['⭐','🌟','☄️','🌠','🪐'],boss:{emoji:'☄️',name:'Dévoreur d’Étoiles'},sky:['#1a2350','#0a0e26'],ground:'#141a33',deco:'cosmos'},
 ];
 function worldOf(n){return WORLDS[Math.floor((n-1)/10)%WORLDS.length];}
+function worldScene(w,boss){
+  const HZ=186;let d='';const R=(a,b)=>a+Math.random()*(b-a);
+  switch(w.deco){
+    case'hills':
+      d=`<ellipse cx="300" cy="58" rx="30" ry="29" fill="#fffbe6" opacity=".5"/>`
+       +`<path d="M0,${HZ} Q70,140 160,176 Q250,200 360,156 L360,${HZ}Z" fill="#00000014"/>`
+       +`<path d="M0,${HZ} Q110,158 220,180 Q300,194 360,174 L360,${HZ}Z" fill="#00000022"/>`;break;
+    case'forest':{let p='';for(let x=-10;x<370;x+=30){const h=R(34,62);p+=`<path d="M${x},${HZ} L${(x+16).toFixed(0)},${(HZ-h).toFixed(0)} L${x+32},${HZ}Z" fill="#00000030"/>`;}
+      d=`<ellipse cx="70" cy="54" rx="22" ry="22" fill="#e8f0d055" opacity=".5"/>`+p;break;}
+    case'cave':{let s='';for(let x=6;x<360;x+=40){const l=R(24,54);s+=`<path d="M${x},0 L${(x+20).toFixed(0)},0 L${(x+10).toFixed(0)},${l.toFixed(0)}Z" fill="#00000038"/>`;}
+      let g='';for(let x=20;x<360;x+=52){const l=R(14,30);g+=`<path d="M${x},${HZ} L${(x+18).toFixed(0)},${HZ} L${(x+9).toFixed(0)},${(HZ-l).toFixed(0)}Z" fill="#0000002e"/>`;}
+      d=s+`<ellipse cx="300" cy="46" rx="16" ry="16" fill="#ffe9a855" opacity=".35"/>`+g;break;}
+    case'swamp':{let t='';for(const x of[54,150,268]){t+=`<path d="M${x},${HZ} L${x},${HZ-46} M${x},${HZ-30} l14,-12 M${x},${HZ-20} l-13,-9" stroke="#00000038" stroke-width="4" fill="none" stroke-linecap="round"/>`;}
+      d=`<rect y="150" width="360" height="9" fill="#ffffff12"/><rect y="168" width="360" height="7" fill="#ffffff0e"/>`+t;break;}
+    case'hell':{let e='';for(let i=0;i<14;i++)e+=`<circle cx="${R(10,350).toFixed(0)}" cy="${R(70,180).toFixed(0)}" r="${R(1.3,3).toFixed(1)}" fill="#ff8a3c" opacity="${R(.4,.9).toFixed(2)}"/>`;
+      let rk='';for(let x=-10;x<370;x+=46){const h=R(18,40);rk+=`<path d="M${x},${HZ} L${(x+14).toFixed(0)},${(HZ-h).toFixed(0)} L${x+30},${HZ}Z" fill="#1a0603"/>`;}
+      d=`<ellipse cx="180" cy="${HZ+30}" rx="220" ry="60" fill="#ff5320" opacity=".35"/>`+rk+e;break;}
+    case'ruins':{let c='';const cols=[[24,60],[70,40],[120,72],[176,34],[232,64],[286,46],[330,56]];for(const[x,h]of cols){c+=`<rect x="${x}" y="${HZ-h}" width="20" height="${h}" fill="#00000030"/><rect x="${x-2}" y="${HZ-h}" width="24" height="6" fill="#0000001e"/>`;}
+      d=`<path d="M150,${HZ-78} q30,-30 60,0 l0,10 q-30,-24 -60,0Z" fill="#00000026"/>`+c;break;}
+    case'ice':{let pk='';for(let x=-10;x<370;x+=58){const h=R(30,58);pk+=`<path d="M${x},${HZ} L${(x+28).toFixed(0)},${(HZ-h).toFixed(0)} L${x+58},${HZ}Z" fill="#ffffff40"/>`;}
+      let sn='';for(let i=0;i<22;i++)sn+=`<circle cx="${R(4,356).toFixed(0)}" cy="${R(8,180).toFixed(0)}" r="${R(1,2.4).toFixed(1)}" fill="#ffffff" opacity="${R(.4,.9).toFixed(2)}"/>`;
+      d=pk+`<path d="M0,${HZ} L120,${HZ-32} L200,${HZ} Z" fill="#ffffff2e"/>`+sn;break;}
+    case'abyss':{let ry='';for(const x of[60,150,250]){ry+=`<polygon points="${x},0 ${x+30},0 ${x+70},${HZ} ${x+8},${HZ}" fill="#ffffff10"/>`;}
+      let bu='';for(let i=0;i<12;i++)bu+=`<circle cx="${R(10,350).toFixed(0)}" cy="${R(60,180).toFixed(0)}" r="${R(1.5,4).toFixed(1)}" fill="none" stroke="#bfe4ff" stroke-opacity="${R(.2,.5).toFixed(2)}"/>`;
+      d=ry+bu+`<path d="M0,${HZ} Q90,${HZ-14} 180,${HZ-4} T360,${HZ-10} L360,${HZ}Z" fill="#00000030"/>`;break;}
+    case'void':{let sh='';for(let i=0;i<9;i++){const x=R(20,340),y=R(30,160),s=R(8,20),a=R(0,60);sh+=`<rect x="${x.toFixed(0)}" y="${y.toFixed(0)}" width="${s.toFixed(0)}" height="${s.toFixed(0)}" fill="#7d63e0" opacity="${R(.12,.35).toFixed(2)}" transform="rotate(${a.toFixed(0)} ${(x+s/2).toFixed(0)} ${(y+s/2).toFixed(0)})"/>`;}
+      let st='';for(let i=0;i<16;i++)st+=`<circle cx="${R(4,356).toFixed(0)}" cy="${R(6,170).toFixed(0)}" r="${R(.6,1.4).toFixed(1)}" fill="#cbb8ff" opacity="${R(.3,.8).toFixed(2)}"/>`;
+      d=`<ellipse cx="180" cy="90" rx="150" ry="80" fill="#5b44d4" opacity=".14"/>`+st+sh;break;}
+    case'cosmos':{let st='';for(let i=0;i<26;i++)st+=`<circle cx="${R(4,356).toFixed(0)}" cy="${R(6,175).toFixed(0)}" r="${R(.6,1.6).toFixed(1)}" fill="#ffffff" opacity="${R(.35,1).toFixed(2)}"/>`;
+      d=`<ellipse cx="180" cy="70" rx="160" ry="70" fill="#5566cc" opacity=".16"/>`+st
+       +`<ellipse cx="300" cy="56" rx="26" ry="26" fill="#c9a86a"/><ellipse cx="300" cy="56" rx="40" ry="10" fill="none" stroke="#e6d3a0" stroke-opacity=".7" stroke-width="3"/>`
+       +`<circle cx="64" cy="44" r="13" fill="#e8ecff" opacity=".85"/>`;break;}
+    default:d='';
+  }
+  const bossFx=boss?`<rect width="360" height="240" fill="#c4304a" opacity=".12"/><ellipse cx="180" cy="120" rx="180" ry="130" fill="none"/>`:'';
+  return `<svg class="scene" viewBox="0 0 360 240" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sky_${w.deco}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${w.sky[0]}"/><stop offset="1" stop-color="${w.sky[1]}"/></linearGradient></defs><rect width="360" height="240" fill="url(#sky_${w.deco})"/>${d}<rect y="${HZ}" width="360" height="${240-HZ}" fill="${w.ground}"/><rect y="${HZ}" width="360" height="4" fill="#ffffff18"/>${bossFx}</svg>`;
+}
 function mobAt(n){const w=worldOf(n);const boss=n%10===0;const emoji=boss?w.boss.emoji:w.mobs[(n-1)%w.mobs.length];let hp=Math.round(60*Math.pow(1.23,n-1));let atk=Math.round(5*Math.pow(1.14,n-1));let gold=Math.round(7*Math.pow(1.12,n-1))+5;if(boss){hp=Math.round(hp*3);atk=Math.round(atk*1.4);gold*=5;}return{n,emoji,hp,atk,gold,boss,world:w,name:boss?('👑 '+w.boss.name):('Créature · '+w.name)};}
 const WFX={as2:'venom',as3:'shadow',as4:'venom',as5:'void',ch4:'holy',ch5:'fire',fa4:'soul',fa5:'soul',so1:'arcane',so2:'arcane',so3:'frost',so4:'arcane',so5:'cosmic'};
 const FXCOL={fire:'#ff6a2c',frost:'#5ec8ff',shadow:'#7d63e0',holy:'#ffe9a8',void:'#9b7bff',soul:'#57e08a',arcane:'#b98bff',venom:'#2fbf6b',cosmic:'#7c9bff'};
@@ -824,10 +867,10 @@ function renderArena(){ensureDay();ensureBattle();const hs=heroStats();const mob
    <div class="arena-head"><span class="floor-badge">⚔️ Étage <b>${state.floor}</b></span><span class="cur wn">🌍 ${mob.world.name}</span></div>
    ${renderVoies()}
    ${banner}
-   <div class="arena" style="background:linear-gradient(180deg,${mob.world.tint}2e,${mob.world.tint}10,var(--surface))">
+   <div class="arena">${worldScene(mob.world,mob.boss)}
      <div class="fighter hero"><div class="hpwrap"><div class="hp hero"><i style="width:${hpPct}%"></i></div><div class="hptext">${Math.max(0,Math.ceil(CB.hp))} / ${hs.pvmax} PV</div></div><div class="fbody herofig" id="heroBody">${drawHero()}</div><div class="fname">${k.emoji} ${k.name} · Nv ${hs.level}</div></div>
      <div class="vs">⚔️</div>
-     <div class="fighter mob"><div class="hpwrap"><div class="hp mob"><i style="width:${mPct}%"></i></div><div class="hptext">${Math.max(0,Math.ceil(CB.mobHP))} / ${mob.hp} PV</div></div><div class="fbody ${mob.boss?'boss':''}" id="mobBody">${mob.emoji}</div><div class="fname">${mob.name}</div></div>
+     <div class="fighter mob"><div class="hpwrap"><div class="hp mob"><i style="width:${mPct}%"></i></div><div class="hptext">${Math.max(0,Math.ceil(CB.mobHP))} / ${mob.hp} PV</div></div><div class="fbody ${mob.boss?'boss':''}" id="mobBody"><span class="mobIdle">${mob.emoji}</span></div><div class="fname">${mob.name}</div></div>
    </div>
    <button class="attack-btn" id="attackBtn">ATTAQUER ⚔️</button>
    <div class="auto-row"><button class="btn ghost" id="autoBtn" style="flex:none">${autoTimer?'⏸ Stop':'▶ Auto'}</button><span class="reward-hint">Bats des mobs → 🪙 or → équipe-toi en Boutique</span></div>
@@ -836,7 +879,7 @@ function renderArena(){ensureDay();ensureBattle();const hs=heroStats();const mob
   updateBaraka();
 }
 function updateBattleUI(){const hs=heroStats(),mob=mobAt(state.floor);const hi=document.querySelector('.hp.hero>i'),mi=document.querySelector('.hp.mob>i');if(hi)hi.style.width=Math.max(0,CB.hp/hs.pvmax*100)+'%';if(mi)mi.style.width=Math.max(0,CB.mobHP/mob.hp*100)+'%';const ht=document.querySelectorAll('.hptext');if(ht[0])ht[0].textContent=Math.max(0,Math.ceil(CB.hp))+' / '+hs.pvmax+' PV';if(ht[1])ht[1].textContent=Math.max(0,Math.ceil(CB.mobHP))+' / '+mob.hp+' PV';}
-function animateAttack(who){const el=$(who==='hero'?'#heroBody':'#mobBody');if(el){const cls=who==='hero'?'lunge-r':'lunge-l';el.classList.add(cls);setTimeout(()=>el.classList.remove(cls),160);}const foe=$(who==='hero'?'#mobBody':'#heroBody');if(foe){foe.classList.add('hit');setTimeout(()=>foe.classList.remove('hit'),300);}}
+function animateAttack(who){const el=$(who==='hero'?'#heroBody':'#mobBody');if(el){const cls=who==='hero'?'swing':'lunge-l';el.classList.add(cls);setTimeout(()=>el.classList.remove(cls),who==='hero'?440:160);}const foe=$(who==='hero'?'#mobBody':'#heroBody');if(foe){foe.classList.add('hit');setTimeout(()=>foe.classList.remove('hit'),300);}}
 function hitFx(){const w=equippedWeapon();const col=WFX[w.id]?FXCOL[WFX[w.id]]:'#ffffff';const f=$('.fighter.mob');if(!f)return;const d=document.createElement('div');d.className='hitfx';d.style.setProperty('--fx',col);f.appendChild(d);setTimeout(()=>d.remove(),400);}
 function floatDmg(who,text,crit,positive,pre){const f=$(who==='hero'?'.fighter.hero':'.fighter.mob');if(!f)return;const d=document.createElement('div');d.className='dmg'+(crit?' crit':'');d.textContent=(pre?pre+' ':'')+(typeof text==='number'?('-'+text):text);d.style.color=positive?'#39D39B':(who==='hero'?'#FF6B7A':(crit?'#FFD36B':'#fff'));d.style.left=(38+Math.random()*24)+'%';f.appendChild(d);setTimeout(()=>d.remove(),820);}
 function attack(){ensureBattle();if(CB.busy)return;const hs=heroStats(),mob=mobAt(state.floor),w=equippedWeapon(),fx=WFX[w.id],l=wlvl(w.id),gb=gemBonus();
